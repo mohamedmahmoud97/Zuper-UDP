@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"net"
-	"github.com/mohamedmahmoud97/"
+
+	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
 )
 
 //ServerInfo is a struct to server info
