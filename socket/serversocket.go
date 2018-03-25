@@ -19,19 +19,20 @@ func CreateSerSocket(servAddr *net.UDPAddr) *net.UDPConn {
 	return servConn
 }
 
-func sendResponse(conn *net.UDPConn, addr *net.UDPAddr) {
-	_, err := conn.WriteToUDP([]byte("An ack to the sent packet from client"), addr)
+func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, buf []byte) {
+	_, err := conn.WriteToUDP(buf, addr)
 	errors.CheckError(err)
 }
 
 //ReceiveFromClients any packet
 func ReceiveFromClients(conn *net.UDPConn) {
-	var buf [512]byte
+	var buf []byte
 
 	_, addr, err := conn.ReadFromUDP(buf[0:])
 	errors.CheckError(err)
 
 	// Data.append(buf)
-
-	go sendResponse(conn, addr)
+	if len(buf) > 0 {
+		go sendResponse(conn, addr, buf)
+	}
 }
