@@ -5,15 +5,15 @@ import (
 	"net"
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
-	socket "github.com/mohamedmahmoud97/Zuper-UDP/socket/serversocket"
+	socket "github.com/mohamedmahmoud97/Zuper-UDP/socket"
 )
 
 //ServerInfo is a struct to server info
 type ServerInfo struct {
 	//PortNumber of the server
-	PortNumber uint16
+	PortNumber string
 	//MaxWindow is the max sliding-window size
-	MaxWindow string
+	MaxWindow int
 }
 
 var (
@@ -21,17 +21,18 @@ var (
 )
 
 func main() {
-	server := ServerInfo{":10001",5}
+	server := ServerInfo{":10001", 5}
 	p = 0.1
-	seedValue = 
-	servAddr, err := net.ResolveUDPAddr("up4", server.PortNumber)
+	seedValue = 50
+	servAddr, err := net.ResolveUDPAddr("udp", server.PortNumber)
 	fmt.Printf("connection in server on port %v", servAddr)
 	errors.CheckError(err)
 
-	socket.CreateSocket(servAddr)
+	//create the socket in server-side
+	servConn := socket.CreateSerSocket(servAddr)
 
 	// go read from the connection
-	for{
+	for {
 		socket.ReceiveFromClients(servConn, p, seedValue)
 	}
 }

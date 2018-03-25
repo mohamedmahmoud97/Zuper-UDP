@@ -1,5 +1,6 @@
 package socket
 
-func CreateSocket() {
+//CreateClientSocket for any client
+func CreateClientSocket() {
 
 }
