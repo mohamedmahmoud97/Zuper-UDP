@@ -12,22 +12,6 @@ import (
 	socket "github.com/mohamedmahmoud97/Zuper-UDP/socket"
 )
 
-const (
-	//ServerIP of the server
-	serverAddr = "127.0.0.1:10001"
-	//ServerPort number
-	serverPort = "10001"
-	//ClientPort number
-	clientAddr = "127.0.0.1:10000"
-)
-
-//var (
-//	//FileName to be transferred
-//	FileName string
-//	//WindowSize is the initial sliding-window size
-//	WindowSize int
-//)
-
 func main() {
 	//Reading Server info from file
 	dat, err := ioutil.ReadFile("/home/mohamedmahmoud/Workspaces/Zuper-UDP/client.in")
@@ -57,14 +41,14 @@ func main() {
 	errors.CheckError(err)
 	localAddr, err := net.ResolveUDPAddr("udp", cAddress.String())
 	errors.CheckError(err)
-	conn, err := net.DialUDP("udp", localAddr, servAddr)
-	errors.CheckError(err)
+
 	//servConn, err := net.ListenUDP("udp", listenAddr)
 	errors.CheckError(err)
 
+	conn := socket.CreateClientSocket(localAddr, servAddr)
 	defer conn.Close()
 
-	socket.CreateClientSocket(conn, initWindow, filename)
+	socket.SendToServer(conn, initWindow, filename)
 
 	// create a channel for a packet number to be written to
 	//i := make(chan int, 1)

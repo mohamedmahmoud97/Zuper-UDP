@@ -4,10 +4,19 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+
+	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
 )
 
-//CreateClientSocket for any client
-func CreateClientSocket(conn *net.UDPConn, window int, filename string) {
+//CreateClientSocket in client-side
+func CreateClientSocket(localAddr, servAddr *net.UDPAddr) *net.UDPConn {
+	conn, err := net.DialUDP("udp", localAddr, servAddr)
+	errors.CheckError(err)
+	return conn
+}
+
+//SendToServer packets
+func SendToServer(conn *net.UDPConn, window int, filename string) {
 	p := make([]byte, 2048)
 	for i := 0; i < 10; i++ {
 		fmt.Fprintf(conn, "Hi UDP Server, How are you doing?")
