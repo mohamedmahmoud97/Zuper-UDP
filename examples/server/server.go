@@ -5,7 +5,7 @@ import (
 	"net"
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
-	socket "github.com/mohamedmahmoud97/Zuper-UDP/socket"
+	socket "github.com/mohamedmahmoud97/Zuper-UDP/socket/serversocket"
 )
 
 //ServerInfo is a struct to server info
@@ -28,11 +28,7 @@ func main() {
 	fmt.Printf("connection in server on port %v", servAddr)
 	errors.CheckError(err)
 
-	//create the socket on the port number
-	servConn, err := net.ListenUDP("udp", servAddr)
-	errors.CheckError(err)
-
-	//defer servConn.Close()
+	socket.CreateSocket(servAddr)
 
 	// go read from the connection
 	for{

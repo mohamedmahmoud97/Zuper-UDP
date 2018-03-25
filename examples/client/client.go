@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
 	"net"
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
@@ -12,7 +14,7 @@ const (
 	//ServerPort number
 	serverPort = "10001"
 	//ClientPort number
-	clientAddr = "10000"
+	clientAddr = "127.0.0.1:10000"
 )
 
 var (
@@ -26,14 +28,26 @@ func main() {
 	// initialize all connections
 	servAddr, err := net.ResolveUDPAddr("udp", serverAddr)
 	errors.CheckError(err)
-	listenAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:10002")
+	// /listenAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:10002")
 	errors.CheckError(err)
 	localAddr, err := net.ResolveUDPAddr("udp", clientAddr)
 	errors.CheckError(err)
 	conn, err := net.DialUDP("udp", localAddr, servAddr)
 	errors.CheckError(err)
-	servConn, err := net.ListenUDP("udp", listenAddr)
+	//servConn, err := net.ListenUDP("udp", listenAddr)
 	errors.CheckError(err)
+
+	p := make([]byte, 2048)
+
+	fmt.Fprintf(conn, "Hi UDP Server, How are you doing?")
+
+	_, err = bufio.NewReader(conn).Read(p)
+	if err == nil {
+		fmt.Printf("%s\n", p)
+	} else {
+		fmt.Printf("Some error %v\n", err)
+	}
+	conn.Close()
 
 	// create a channel for a packet number to be written to
 	//i := make(chan int, 1)
