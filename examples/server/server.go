@@ -37,7 +37,6 @@ func convertToInt(s string) int16 {
 }
 
 func main() {
-
 	//Reading Server info from file
 	dat, err := ioutil.ReadFile("/home/mohamedmahmoud/Workspaces/Zuper-UDP/server.in")
 	errors.CheckError(err)
@@ -48,8 +47,8 @@ func main() {
 	p = convertToFloat(ppt)
 	windowSize, err := strconv.Atoi(window)
 
+	//joining the IP address to the port
 	var address bytes.Buffer
-
 	address.WriteString(":")
 	address.WriteString(port)
 
