@@ -37,6 +37,8 @@ func main() {
 	//servConn, err := net.ListenUDP("udp", listenAddr)
 	errors.CheckError(err)
 
+	defer conn.Close()
+
 	p := make([]byte, 2048)
 	for {
 		fmt.Fprintf(conn, "Hi UDP Server, How are you doing?")
@@ -48,7 +50,6 @@ func main() {
 			fmt.Printf("Some error %v\n", err)
 		}
 	}
-	conn.Close()
 
 	// create a channel for a packet number to be written to
 	//i := make(chan int, 1)

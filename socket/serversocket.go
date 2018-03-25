@@ -25,7 +25,7 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr) {
 }
 
 //ReceiveFromClients any packet
-func ReceiveFromClients(conn *net.UDPConn, p, seedValue float32) {
+func ReceiveFromClients(conn *net.UDPConn) {
 	var buf [512]byte
 
 	_, addr, err := conn.ReadFromUDP(buf[0:])
