@@ -2,16 +2,17 @@ package main
 
 import (
 	"net"
+
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
 )
 
 const (
 	//ServerIP of the server
-	ServerIP = "192.168.1.11"
+	serverAddr = "127.0.0.1:10001"
 	//ServerPort number
-	ServerPort = "5000"
+	serverPort = "10001"
 	//ClientPort number
-	ClientPort = "3000"
+	clientAddr = "10000"
 )
 
 var (
@@ -23,11 +24,11 @@ var (
 
 func main() {
 	// initialize all connections
-	servAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:10001")
+	servAddr, err := net.ResolveUDPAddr("udp", serverAddr)
 	errors.CheckError(err)
 	listenAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:10002")
 	errors.CheckError(err)
-	localAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:0")
+	localAddr, err := net.ResolveUDPAddr("udp", clientAddr)
 	errors.CheckError(err)
 	conn, err := net.DialUDP("udp", localAddr, servAddr)
 	errors.CheckError(err)
