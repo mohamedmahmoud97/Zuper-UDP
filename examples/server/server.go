@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"github.com/mohamedmahmoud97/"
 )
 
 //ServerInfo is a struct to server info
@@ -26,10 +27,10 @@ func recieve(servConn *net.UDPConn) {
 func main() {
 	servAddr, err := net.ResolveUDPAddr("udp", ":10001")
 	fmt.Println(servAddr)
-	CheckError(err)
+	errors.CheckError(err)
 
 	servConn, err := net.ListenUDP("udp", servAddr)
-	CheckError(err)
+	errors.CheckError(err)
 
 	defer servConn.Close()
 
