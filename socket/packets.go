@@ -12,5 +12,5 @@ type Packet struct {
 //AckPacket is the acknoledgment packet
 type AckPacket struct {
 	//Header
-	cksum uint16
+	Cksum uint16
 }

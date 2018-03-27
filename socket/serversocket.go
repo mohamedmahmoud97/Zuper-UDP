@@ -22,14 +22,14 @@ func CreateSerSocket(servAddr *net.UDPAddr) *net.UDPConn {
 }
 
 func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *Packet) {
-	ack := AckPacket{cksum: 20}
+	ack := AckPacket{Cksum: 20}
 
 	b, err := msgpack.Marshal(&ack)
 	if err != nil {
 		panic(err)
 	}
 	_, err = conn.WriteToUDP(b, addr)
-	//fmt.Println(packet.Data)
+	fmt.Println(ack.Cksum)
 	fmt.Printf("delevired the packet with sequence number %v\n", packet.Seqno)
 	errors.CheckError(err)
 }
