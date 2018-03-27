@@ -6,7 +6,7 @@ type Packet struct {
 	cksum, len uint16
 	seqno      uint32
 	//Data
-	data [512]byte
+	data []byte
 }
 
 //AckPacket is the acknoledgment packet

@@ -37,7 +37,7 @@ func main() {
 	// initialize all connections
 	servAddr, err := net.ResolveUDPAddr("udp", sAddress.String())
 	errors.CheckError(err)
-	// /listenAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:10002")
+	//listenAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:10002")
 	errors.CheckError(err)
 	localAddr, err := net.ResolveUDPAddr("udp", cAddress.String())
 	errors.CheckError(err)
