@@ -70,3 +70,22 @@ func SendToServer(conn *net.UDPConn, window int, filename string, servAddr *net.
 	noOfChunks := int(noChunks)
 	reliableSend(packets, noOfChunks, conn, window, servAddr)
 }
+
+//ReceiveFromServer any ack packet
+func ReceiveFromServer(conn *net.UDPConn) {
+	buf := make([]byte, 600)
+	length, _, err := conn.ReadFromUDP(buf[0:])
+	errors.CheckError(err)
+
+	if length < 30 && length != 0 {
+		var packet Packet
+
+		err := msgpack.Unmarshal(buf, &packet)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println(packet.Cksum)
+	}
+
+}

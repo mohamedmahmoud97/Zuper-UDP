@@ -50,6 +50,10 @@ func main() {
 
 	socket.SendToServer(conn, initWindow, filename, servAddr)
 
+	for {
+		socket.ReceiveFromServer(conn)
+	}
+
 	// create a channel for a packet number to be written to
 	//i := make(chan int, 1)
 	//go func () {

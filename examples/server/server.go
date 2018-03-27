@@ -71,7 +71,7 @@ func main() {
 		if length > 0 {
 			//fmt.Print("receiving packets from clients ... \n")
 			// fmt.Print(buf)
-			socket.ReceiveFromClients(servConn, buf, length, addr)
+			go socket.ReceiveFromClients(servConn, buf, length, addr)
 		}
 	}
 }

@@ -1,7 +1,6 @@
 package socket
 
 import (
-	"bytes"
 	"fmt"
 	"net"
 
@@ -23,10 +22,13 @@ func CreateSerSocket(servAddr *net.UDPAddr) *net.UDPConn {
 }
 
 func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *Packet) {
-	var ackStr bytes.Buffer
-	ackStr.WriteString("delevired the packet with sequence number ")
-	ackStr.WriteString(string(packet.Seqno))
-	_, err := conn.WriteToUDP(ackStr.Bytes(), addr)
+	ack := AckPacket{cksum: 20}
+
+	b, err := msgpack.Marshal(&ack)
+	if err != nil {
+		panic(err)
+	}
+	_, err = conn.WriteToUDP(b, addr)
 	//fmt.Println(packet.Data)
 	fmt.Printf("delevired the packet with sequence number %v\n", packet.Seqno)
 	errors.CheckError(err)
@@ -42,5 +44,5 @@ func ReceiveFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.UDP
 	}
 
 	Data = append(Data, packet.Data)
-	go sendResponse(conn, addr, &packet)
+	sendResponse(conn, addr, &packet)
 }
