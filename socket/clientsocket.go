@@ -1,14 +1,14 @@
 package socket
 
 import (
-	"bufio"
 	"bytes"
+	"encoding/gob"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net"
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
-	"github.com/mohamedmahmoud97/Zuper-UDP/socket"
 )
 
 //CreateClientSocket in client-side
@@ -27,42 +27,58 @@ func encodeFile(fileName string) []byte {
 	return dat
 }
 
-func reliableSend(packets []sockets.Packet){
-	for i := 0; i < noChunks; i++ {
-		fmt.Fprintf(conn, packets[i])
+func reliableSend(packets []Packet, noChunks int, conn *net.UDPConn, window int) {
+	// for i := 0; i < noChunks; i++ {
+	// 	fmt.Fprintf(conn, packets[i])
 
-		_, err := bufio.NewReader(conn).Read(p)
-		if err == nil {
-			fmt.Printf("%s\n", p)
-		} else {
-			fmt.Printf("Some error %v\n", err)
-		}
+	// 	_, err := bufio.NewReader(conn).Read(p)
+	// 	if err == nil {
+	// 		fmt.Printf("%s\n", p)
+	// 	} else {
+	// 		fmt.Printf("Some error %v\n", err)
+	// 	}
+	// }
+
+	var buffer bytes.Buffer
+	encoder := gob.NewEncoder(&buffer)
+	for i := 0; i < noChunks; i++ {
+		encoder.Encode(packets[i])
+		conn.Write(buffer.Bytes())
+		buffer.Reset()
 	}
 }
 
 //SendToServer packets
 func SendToServer(conn *net.UDPConn, window int, filename string) {
-	p := make([]byte, 2048)
+	fmt.Println("hello the client is starting the sending process ...")
 
 	//read file into bytes
 	dataBytes := encodeFile(filename)
 
-	var previous, seqNum = 0
+	var seqNum uint32
+	size := 512
+	previous := 0
 	r := 512
 
-	noChunks := float64(dataBytes) / float64(r)
-	int(math.Ceil(noChunks))
+	noChunk := float64(len(dataBytes)) / float64(r)
+	noChunks := uint32(math.Ceil(noChunk))
 
-	packets := []socket.Packet
+	packets := []Packet{}
 
 	//make data packets and segment the file to be sent and assign seqNumber
-	for seqNum<noChunks { 
+	for seqNum < noChunks {
 		chunk := dataBytes[previous:r]
-		piko := socket.Packet{data: chunk, len: len(chunk), seqno: seqNum}
-		packets.append(piko)
-		seqNum += 1
-		previous += r
+		noOfBytes := uint16(len(chunk))
+		piko := Packet{data: chunk, len: noOfBytes, seqno: seqNum}
+		packets = append(packets, piko)
+		//making packets
+		fmt.Printf("making packets: \nPacket %d", seqNum)
+		fmt.Print(packets[seqNum])
+		seqNum++
+		previous += size
+		r += size
 	}
 
-	reliableSend(packets)
+	noOfChunks := int(noChunks)
+	reliableSend(packets, noOfChunks, conn, window)
 }
