@@ -1,10 +1,12 @@
 package socket
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
+	"github.com/vmihailenco/msgpack"
 )
 
 var (
@@ -20,22 +22,41 @@ func CreateSerSocket(servAddr *net.UDPAddr) *net.UDPConn {
 	return servConn
 }
 
-func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, buf []byte) {
-	_, err := conn.WriteToUDP(buf, addr)
-	fmt.Println(string(buf))
+func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *Packet) {
+	var ackStr bytes.Buffer
+	ackStr.WriteString("delevired the packet with sequence number ")
+	ackStr.WriteString(string(packet.Seqno))
+	_, err := conn.WriteToUDP(ackStr.Bytes(), addr)
+	fmt.Println(packet.Data)
 	errors.CheckError(err)
 }
 
 //ReceiveFromClients any packet
-func ReceiveFromClients(conn *net.UDPConn) {
-	var buf []byte
+func ReceiveFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.UDPAddr) {
+	var packet Packet
 
-	_, addr, err := conn.ReadFromUDP(buf[0:])
-	errors.CheckError(err)
+	// fmt.Println("\nStarting to accept from clients ... ")
 
-	if len(buf) > 0 {
-		Data = append(Data, buf)
-		fmt.Println(buf)
-		go sendResponse(conn, addr, buf)
+	// if err := gob.NewDecoder(bytes.NewReader(buf[:length])).Decode(&packet); err != nil {
+	// 	errors.CheckError(err)
+	// }
+
+	err := msgpack.Unmarshal(buf, &packet)
+	if err != nil {
+		panic(err)
 	}
+
+	// err := json.Unmarshal(buf[:length], &packet)
+	// if err != nil {
+	// 	fmt.Print("Unmarshal server response failed.")
+	// 	log.Fatal(err)
+	// }
+
+	// buffer := bytes.NewBuffer(buf[:length])
+	// decoder := gob.NewDecoder(buffer)
+	// decoder.Decode(&packet)
+	Data = append(Data, packet.Data)
+	fmt.Println("am here yo old ass ....")
+	fmt.Println(packet)
+	//go sendResponse(conn, addr, &packet)
 }

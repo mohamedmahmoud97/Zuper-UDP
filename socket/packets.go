@@ -3,10 +3,10 @@ package socket
 //Packet is the data packet
 type Packet struct {
 	//Header
-	cksum, len uint16
-	seqno      uint32
+	Seqno      uint32
+	Cksum, Len uint16
 	//Data
-	data []byte
+	Data []byte
 }
 
 //AckPacket is the acknoledgment packet

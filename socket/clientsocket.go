@@ -2,13 +2,13 @@ package socket
 
 import (
 	"bytes"
-	"encoding/gob"
 	"fmt"
 	"io/ioutil"
 	"math"
 	"net"
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
+	"github.com/vmihailenco/msgpack"
 )
 
 //CreateClientSocket in client-side
@@ -27,30 +27,55 @@ func encodeFile(fileName string) []byte {
 	return dat
 }
 
-func reliableSend(packets []Packet, noChunks int, conn *net.UDPConn, window int) {
-	// for i := 0; i < noChunks; i++ {
-	// 	fmt.Fprintf(conn, packets[i])
+func reliableSend(packets []Packet, noChunks int, conn *net.UDPConn, window int, servAddr *net.UDPAddr) {
+	// for i := 0; i < 1; i++ {
+	// 	fmt.Fprintf(conn, "hey it's a fuckin test yo bitch be cool !!")
 
-	// 	_, err := bufio.NewReader(conn).Read(p)
-	// 	if err == nil {
-	// 		fmt.Printf("%s\n", p)
-	// 	} else {
-	// 		fmt.Printf("Some error %v\n", err)
-	// 	}
+	// 	// _, err := bufio.NewReader(conn).Read(p)
+	// 	// if err == nil {
+	// 	// 	fmt.Printf("%s\n", p)
+	// 	// } else {
+	// 	// 	fmt.Printf("Some error %v\n", err)
+	// 	// }
 	// }
 
-	var buffer bytes.Buffer
-	encoder := gob.NewEncoder(&buffer)
+	// var buffer bytes.Buffer
+	// encoder := gob.NewEncoder(&buffer)
 	for i := 0; i < noChunks; i++ {
-		encoder.Encode(packets[i])
-		conn.Write(buffer.Bytes())
-		buffer.Reset()
+		// jsonRequest, err := json.Marshal(packets[i])
+		// if err != nil {
+		// 	log.Print("Marshal connection information failed.")
+		// 	log.Fatal(err)
+		// }
+
+		// _, err := conn.Write([]byte(fmt.Sprintf("%v", packets[i])))
+		// errors.CheckError(err)
+
+		// var buf bytes.Buffer
+		// if err := gob.NewEncoder(&buf).Encode(packets[i]); err != nil {
+		// 	errors.CheckError(err)
+		// }
+		// _, err := conn.WriteToUDP(buf.Bytes(), servAddr)
+		// errors.CheckError(err)
+
+		// fmt.Printf("\n\n\nsending packet %d\n", i)
+		// encoder.Encode(packets[25])
+		// fmt.Println(buffer)
+		// _, err := conn.Write(buffer.Bytes())
+		// errors.CheckError(err)
+		// buffer.Reset()
+
+		b, err := msgpack.Marshal(&packets[i])
+		if err != nil {
+			panic(err)
+		}
+		_, err = conn.Write(b)
 	}
 }
 
 //SendToServer packets
-func SendToServer(conn *net.UDPConn, window int, filename string) {
-	fmt.Println("hello the client is starting the sending process ...")
+func SendToServer(conn *net.UDPConn, window int, filename string, servAddr *net.UDPAddr) {
+	fmt.Print("hello the client is starting the sending process ... \n")
 
 	//read file into bytes
 	dataBytes := encodeFile(filename)
@@ -69,16 +94,15 @@ func SendToServer(conn *net.UDPConn, window int, filename string) {
 	for seqNum < noChunks {
 		chunk := dataBytes[previous:r]
 		noOfBytes := uint16(len(chunk))
-		piko := Packet{data: chunk, len: noOfBytes, seqno: seqNum}
+		piko := Packet{Data: chunk, Len: noOfBytes, Seqno: seqNum}
 		packets = append(packets, piko)
 		//making packets
-		fmt.Printf("making packets: \nPacket %d", seqNum)
-		fmt.Print(packets[seqNum])
+		fmt.Printf("making packet %d ...\n", seqNum)
 		seqNum++
 		previous += size
 		r += size
 	}
 
 	noOfChunks := int(noChunks)
-	reliableSend(packets, noOfChunks, conn, window)
+	reliableSend(packets, noOfChunks, conn, window, servAddr)
 }

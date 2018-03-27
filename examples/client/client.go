@@ -48,7 +48,7 @@ func main() {
 	conn := socket.CreateClientSocket(localAddr, servAddr)
 	defer conn.Close()
 
-	socket.SendToServer(conn, initWindow, filename)
+	socket.SendToServer(conn, initWindow, filename, servAddr)
 
 	// create a channel for a packet number to be written to
 	//i := make(chan int, 1)
