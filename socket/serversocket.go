@@ -27,7 +27,8 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *Packet) {
 	ackStr.WriteString("delevired the packet with sequence number ")
 	ackStr.WriteString(string(packet.Seqno))
 	_, err := conn.WriteToUDP(ackStr.Bytes(), addr)
-	fmt.Println(packet.Data)
+	//fmt.Println(packet.Data)
+	fmt.Printf("delevired the packet with sequence number %v\n", packet.Seqno)
 	errors.CheckError(err)
 }
 
@@ -35,28 +36,11 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *Packet) {
 func ReceiveFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.UDPAddr) {
 	var packet Packet
 
-	// fmt.Println("\nStarting to accept from clients ... ")
-
-	// if err := gob.NewDecoder(bytes.NewReader(buf[:length])).Decode(&packet); err != nil {
-	// 	errors.CheckError(err)
-	// }
-
 	err := msgpack.Unmarshal(buf, &packet)
 	if err != nil {
 		panic(err)
 	}
 
-	// err := json.Unmarshal(buf[:length], &packet)
-	// if err != nil {
-	// 	fmt.Print("Unmarshal server response failed.")
-	// 	log.Fatal(err)
-	// }
-
-	// buffer := bytes.NewBuffer(buf[:length])
-	// decoder := gob.NewDecoder(buffer)
-	// decoder.Decode(&packet)
 	Data = append(Data, packet.Data)
-	fmt.Println("am here yo old ass ....")
-	fmt.Println(packet)
-	//go sendResponse(conn, addr, &packet)
+	go sendResponse(conn, addr, &packet)
 }

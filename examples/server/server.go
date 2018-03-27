@@ -65,13 +65,12 @@ func main() {
 	// go read from the connection
 	for {
 		buf := make([]byte, 600)
-		// fmt.Println("\nStarting to accept from clients ... ")
 		length, addr, err := servConn.ReadFromUDP(buf[0:])
 		errors.CheckError(err)
 
 		if length > 0 {
-			fmt.Print("buffer is not empty ...")
-			fmt.Print(buf)
+			//fmt.Print("receiving packets from clients ... \n")
+			// fmt.Print(buf)
 			socket.ReceiveFromClients(servConn, buf, length, addr)
 		}
 	}
