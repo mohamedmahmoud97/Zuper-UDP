@@ -9,8 +9,15 @@ type Packet struct {
 	Data []byte
 }
 
+//CheckSum of the packet
+func (p *Packet) CheckSum() {
+	//cksum := 0
+
+}
+
 //AckPacket is the acknoledgment packet
 type AckPacket struct {
 	//Header
+	Seqno uint32
 	Cksum uint16
 }

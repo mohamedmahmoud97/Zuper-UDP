@@ -48,36 +48,10 @@ func main() {
 	conn := socket.CreateClientSocket(localAddr, servAddr)
 	defer conn.Close()
 
-	socket.SendToServer(conn, initWindow, filename, servAddr)
+	go socket.SendToServer(conn, initWindow, filename)
 
 	for {
+		fmt.Println("waiting anything from server ...")
 		socket.ReceiveFromServer(conn)
 	}
-
-	// create a channel for a packet number to be written to
-	//i := make(chan int, 1)
-	//go func () {
-	//loop:
-	//// wait for the ack while we're waiting for a packet or timing out
-	//	go wait_for_ack(servConn, packetnum, i)
-	//	for {
-	//
-	//		select {
-	//		case res := <-i:
-	//			fmt.Println("\nPacket accepted!")
-	//			packet_num = res+1
-	//			// wait for another ack for the next one if we get the right packet
-	//			goto loop
-	//		case <-time.After(100 * time.Millisecond):
-	//			fmt.Println("timed out for", packet_num)
-	//			// if it takes too long for an ACK, go send the packet again
-	//			write(conn)
-	//		}
-	//	}
-	//}()
-	//// go write to the connection because the previous stuff is
-	//// all hanging out in the background for now
-	//for {
-	//	write(conn)
-	//}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 
@@ -37,6 +38,9 @@ func convertToInt(s string) int16 {
 }
 
 func main() {
+	//The algorithm to be used in reliability
+	algo := os.Args[1]
+
 	//Reading Server info from file
 	dat, err := ioutil.ReadFile("/home/mohamedmahmoud/Workspaces/Zuper-UDP/server.in")
 	errors.CheckError(err)
@@ -68,10 +72,14 @@ func main() {
 		length, addr, err := servConn.ReadFromUDP(buf[0:])
 		errors.CheckError(err)
 
-		if length > 0 {
-			//fmt.Print("receiving packets from clients ... \n")
+		if len(buf) > 50 {
+			fmt.Print("receiving data packets from clients ... \n")
 			// fmt.Print(buf)
-			go socket.ReceiveFromClients(servConn, buf, length, addr)
+			go socket.ReceiveReqFromClients(servConn, buf, length, addr, windowSize, algo)
+		} else if len(buf) > 0 && len(buf) < 55 {
+			fmt.Print("receiving ack packets from clients ... \n")
+			// fmt.Print(buf)
+			go socket.ReceiveAckFromClients(servConn, buf, length, addr, windowSize, algo)
 		}
 	}
 }

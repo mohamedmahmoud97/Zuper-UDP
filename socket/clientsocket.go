@@ -1,14 +1,16 @@
 package socket
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
-	"math"
 	"net"
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
 	"github.com/vmihailenco/msgpack"
+)
+
+var (
+	//RecData is the buffer of all data received
+	RecData = make([][]byte, 1024)
 )
 
 //CreateClientSocket in client-side
@@ -18,66 +20,47 @@ func CreateClientSocket(localAddr, servAddr *net.UDPAddr) *net.UDPConn {
 	return conn
 }
 
-func encodeFile(fileName string) []byte {
-	var file bytes.Buffer
-	file.WriteString("/home/mohamedmahmoud/Workspaces/Zuper-UDP/")
-	file.WriteString(fileName)
-	dat, err := ioutil.ReadFile(file.String())
-	errors.CheckError(err)
-	return dat
-}
+func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *Packet) {
+	ack := AckPacket{Seqno: packet.Seqno, Cksum: 20}
 
-func reliableSend(packets []Packet, noChunks int, conn *net.UDPConn, window int, servAddr *net.UDPAddr) {
-	for i := 0; i < noChunks; i++ {
-		b, err := msgpack.Marshal(&packets[i])
-		if err != nil {
-			panic(err)
-		}
-		_, err = conn.Write(b)
+	b, err := msgpack.Marshal(&ack)
+	if err != nil {
+		panic(err)
 	}
+
+	_, err = conn.WriteToUDP(b, addr)
+	errors.CheckError(err)
 }
 
 //SendToServer packets
-func SendToServer(conn *net.UDPConn, window int, filename string, servAddr *net.UDPAddr) {
-	fmt.Print("hello the client is starting the sending process ... \n")
+func SendToServer(conn *net.UDPConn, window int, filename string) {
+	fmt.Print("hello the client is requesting a file from server ... \n")
 
-	//read file into bytes
-	dataBytes := encodeFile(filename)
+	file := []byte(filename)
 
-	var seqNum uint32
-	size := 512
-	previous := 0
-	r := 512
+	noOfBytes := uint16(len(file))
+	reqPacket := Packet{Data: file, Cksum: 20, Len: noOfBytes}
 
-	noChunk := float64(len(dataBytes)) / float64(r)
-	noChunks := uint32(math.Ceil(noChunk))
-
-	packets := []Packet{}
-
-	//make data packets and segment the file to be sent and assign seqNumber
-	for seqNum < noChunks {
-		chunk := dataBytes[previous:r]
-		noOfBytes := uint16(len(chunk))
-		piko := Packet{Data: chunk, Len: noOfBytes, Seqno: seqNum}
-		packets = append(packets, piko)
-		//making packets
-		fmt.Printf("making packet %d ...\n", seqNum)
-		seqNum++
-		previous += size
-		r += size
+	b, err := msgpack.Marshal(&reqPacket)
+	if err != nil {
+		panic(err)
 	}
 
-	noOfChunks := int(noChunks)
-	reliableSend(packets, noOfChunks, conn, window, servAddr)
+	fmt.Println("Encoded the message ...")
+
+	_, err = conn.Write(b)
+	errors.CheckError(err)
 }
 
 //ReceiveFromServer any ack packet
 func ReceiveFromServer(conn *net.UDPConn) {
 	buf := make([]byte, 600)
-	length, _, err := conn.ReadFromUDP(buf[0:])
+	length, addr, err := conn.ReadFromUDP(buf[0:])
 	errors.CheckError(err)
 
-	if length < 30 && length != 0 {
+	fmt.Println(buf)
+
+	if length > 0 {
 		var packet Packet
 
 		err := msgpack.Unmarshal(buf, &packet)
@@ -85,7 +68,10 @@ func ReceiveFromServer(conn *net.UDPConn) {
 			panic(err)
 		}
 
-		fmt.Println(packet.Cksum)
+		fmt.Printf("Delivered packet with seqno %v \n", packet.Seqno)
+
+		RecData = append(RecData, packet.Data)
+		sendResponse(conn, addr, &packet)
 	}
 
 }
