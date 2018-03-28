@@ -92,18 +92,12 @@ func ReceiveReqFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.
 
 //ReceiveAckFromClients any packet
 func ReceiveAckFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.UDPAddr, windowSize int, algo string) {
-	// var packet AckPacket
+	var packet AckPacket
 
-	// err := msgpack.Unmarshal(buf, &packet)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	err := msgpack.Unmarshal(buf, &packet)
+	if err != nil {
+		panic(err)
+	}
 
-	// n := len(packet.Data)
-	// filename := string(packet.Data[:n])
-	// fmt.Printf("requested the filename: %v", filename)
-
-	// if filename == "test.pdf" {
-	// 	sendToClient(conn, windowSize, addr, algo, filename)
-	// }
+	fmt.Printf("Received Ack of packet with seqno %v", packet.Seqno)
 }

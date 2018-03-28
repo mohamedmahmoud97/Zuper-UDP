@@ -28,7 +28,7 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *Packet) {
 		panic(err)
 	}
 
-	_, err = conn.WriteToUDP(b, addr)
+	_, err = conn.Write(b)
 	errors.CheckError(err)
 }
 
@@ -58,8 +58,6 @@ func ReceiveFromServer(conn *net.UDPConn) {
 	length, addr, err := conn.ReadFromUDP(buf[0:])
 	errors.CheckError(err)
 
-	fmt.Println(buf)
-
 	if length > 0 {
 		var packet Packet
 
@@ -71,7 +69,7 @@ func ReceiveFromServer(conn *net.UDPConn) {
 		fmt.Printf("Delivered packet with seqno %v \n", packet.Seqno)
 
 		RecData = append(RecData, packet.Data)
-		sendResponse(conn, addr, &packet)
+		go sendResponse(conn, addr, &packet)
 	}
 
 }

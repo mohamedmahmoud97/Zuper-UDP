@@ -72,11 +72,11 @@ func main() {
 		length, addr, err := servConn.ReadFromUDP(buf[0:])
 		errors.CheckError(err)
 
-		if len(buf) > 50 {
+		if len(buf) > 60 {
 			fmt.Print("receiving data packets from clients ... \n")
 			// fmt.Print(buf)
 			go socket.ReceiveReqFromClients(servConn, buf, length, addr, windowSize, algo)
-		} else if len(buf) > 0 && len(buf) < 55 {
+		} else if len(buf) > 0 && len(buf) < 20 {
 			fmt.Print("receiving ack packets from clients ... \n")
 			// fmt.Print(buf)
 			go socket.ReceiveAckFromClients(servConn, buf, length, addr, windowSize, algo)
