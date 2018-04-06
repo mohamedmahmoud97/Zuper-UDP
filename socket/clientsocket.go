@@ -34,7 +34,7 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *Packet) {
 
 //SendToServer packets
 func SendToServer(conn *net.UDPConn, window int, filename string) {
-	fmt.Print("hello the client is requesting a file from server ... \n")
+	fmt.Printf("hello the client is requesting file %v from server ... \n", filename)
 
 	file := []byte(filename)
 

@@ -45,13 +45,16 @@ func main() {
 	//servConn, err := net.ListenUDP("udp", listenAddr)
 	errors.CheckError(err)
 
+	//create the socket between the client and the server
 	conn := socket.CreateClientSocket(localAddr, servAddr)
 	defer conn.Close()
 
+	//send the filename to the server
 	go socket.SendToServer(conn, initWindow, filename)
 
+	//receive any packet from the server
 	for {
-		fmt.Println("waiting anything from server ...")
+		// fmt.Println("waiting anything from server ...")
 		socket.ReceiveFromServer(conn)
 	}
 }
