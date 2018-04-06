@@ -99,5 +99,8 @@ func ReceiveAckFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.
 		panic(err)
 	}
 
-	fmt.Printf("Received Ack of packet with seqno %v", packet.Seqno)
+	fmt.Printf("Received Ack of packet with seqno %v \n", packet.Seqno)
+
+	//a channel for sending seqno
+	AckCheck <- packet.Seqno
 }

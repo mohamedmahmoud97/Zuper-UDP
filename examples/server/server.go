@@ -73,12 +73,9 @@ func main() {
 		errors.CheckError(err)
 
 		if length > 30 {
-			fmt.Print("receiving data packets from clients ... \n")
-			// fmt.Print(buf)
+			fmt.Print("receiving data packet from clients ... \n")
 			go socket.ReceiveReqFromClients(servConn, buf, length, addr, windowSize, algo)
 		} else if length > 0 && length < 30 {
-			//fmt.Print("receiving ack packets from clients ... \n")
-			// fmt.Print(buf)
 			go socket.ReceiveAckFromClients(servConn, buf, length, addr, windowSize, algo)
 		}
 	}
