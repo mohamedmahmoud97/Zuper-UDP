@@ -90,9 +90,7 @@ func ReceiveReqFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.
 	filename := string(packet.Data[:n])
 	fmt.Printf("requested the filename: %v", filename)
 
-	if filename == "test.pdf" {
-		sendToClient(conn, windowSize, addr, algo, filename)
-	}
+	sendToClient(conn, windowSize, addr, algo, filename)
 }
 
 //ReceiveAckFromClients any packet
