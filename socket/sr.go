@@ -1,11 +1,12 @@
 package socket
 
 import (
+	"fmt"
 	"net"
 )
 
 //SR is the algorithm of selective-repeat
-func SR(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, window int) {
+func SR(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, window int, plp float32) {
 	start := 0
 
 	//make all the chunks have value 0 as unack
@@ -33,6 +34,7 @@ func SR(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, wi
 				sendWinPack(start, 1, packets, conn, addr, noChunks)
 			}
 		} else if ackPack[ackpckt] == 2 {
+			fmt.Print("Resending packets ... \n")
 			sendWinPack(start, window, packets, conn, addr, noChunks)
 		}
 	}

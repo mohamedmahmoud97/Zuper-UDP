@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"fmt"
 	"net"
 )
 
@@ -11,7 +12,7 @@ var (
 )
 
 //GBN is the go-back-n algorithm
-func GBN(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, window int) {
+func GBN(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, window int, plp float32) {
 
 	start := 0
 
@@ -40,6 +41,7 @@ func GBN(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, w
 				sendWinPack(start, 1, packets, conn, addr, noChunks)
 			}
 		} else if ackPack[ackpckt] == 2 {
+			fmt.Print("Resending packets ... \n")
 			sendWinPack(start, window, packets, conn, addr, noChunks)
 		}
 	}

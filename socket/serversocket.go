@@ -33,7 +33,7 @@ func encodeFile(fileName string) []byte {
 	return dat
 }
 
-func sendToClient(conn *net.UDPConn, window int, addr *net.UDPAddr, algo, filename string) {
+func sendToClient(conn *net.UDPConn, window int, addr *net.UDPAddr, algo, filename string, plp float32) {
 	//read file into bytes
 	dataBytes := encodeFile(filename)
 
@@ -63,23 +63,23 @@ func sendToClient(conn *net.UDPConn, window int, addr *net.UDPAddr, algo, filena
 	noOfChunks := int(noChunks)
 
 	//send the packets in the way of the given algo
-	reliableSend(packets, noOfChunks, conn, window, addr, algo)
+	reliableSend(packets, noOfChunks, conn, window, addr, algo, plp)
 }
 
-func reliableSend(packets []Packet, noChunks int, conn *net.UDPConn, window int, addr *net.UDPAddr, algo string) {
+func reliableSend(packets []Packet, noChunks int, conn *net.UDPConn, window int, addr *net.UDPAddr, algo string, plp float32) {
 	switch algo {
 	case "sw":
-		SW(packets, noChunks, conn, addr)
+		SW(packets, noChunks, conn, addr, plp)
 	case "gbn":
-		GBN(packets, noChunks, conn, addr, window)
+		GBN(packets, noChunks, conn, addr, window, plp)
 	case "sr":
-		SR(packets, noChunks, conn, addr, window)
+		SR(packets, noChunks, conn, addr, window, plp)
 	}
 	fmt.Print("finished ... \n")
 }
 
 //ReceiveReqFromClients any packet
-func ReceiveReqFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.UDPAddr, windowSize int, algo string) {
+func ReceiveReqFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.UDPAddr, windowSize int, algo string, plp float32) {
 	var packet Packet
 
 	err := msgpack.Unmarshal(buf, &packet)
@@ -91,7 +91,7 @@ func ReceiveReqFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.
 	filename := string(packet.Data[:n])
 	fmt.Printf("requested the filename: %v", filename)
 
-	sendToClient(conn, windowSize, addr, algo, filename)
+	sendToClient(conn, windowSize, addr, algo, filename, plp)
 }
 
 //ReceiveAckFromClients any packet

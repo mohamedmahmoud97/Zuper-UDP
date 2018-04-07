@@ -45,10 +45,10 @@ func main() {
 	dat, err := ioutil.ReadFile("/home/mohamedmahmoud/Workspaces/Zuper-UDP/device_info/server.in")
 	errors.CheckError(err)
 	s := strings.Split(string(dat), "\n")
-	port, window, seed, ppt := s[0], s[1], s[2], s[3]
+	port, window, seed, plp := s[0], s[1], s[2], s[3]
 
 	seedValue = convertToFloat(seed)
-	p = convertToFloat(ppt)
+	p = convertToFloat(plp)
 	windowSize, err := strconv.Atoi(window)
 
 	//joining the IP address to the port
@@ -74,7 +74,7 @@ func main() {
 
 		if length > 30 {
 			fmt.Print("receiving data packet from clients ... \n")
-			go socket.ReceiveReqFromClients(servConn, buf, length, addr, windowSize, algo)
+			go socket.ReceiveReqFromClients(servConn, buf, length, addr, windowSize, algo, p)
 		} else if length > 0 && length < 30 {
 			go socket.ReceiveAckFromClients(servConn, buf, length, addr, windowSize, algo)
 		}
