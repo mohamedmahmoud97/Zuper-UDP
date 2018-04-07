@@ -14,7 +14,7 @@ import (
 
 func main() {
 	//Reading Server info from file
-	dat, err := ioutil.ReadFile("/home/mohamedmahmoud/Workspaces/Zuper-UDP/client.in")
+	dat, err := ioutil.ReadFile("/home/mohamedmahmoud/Workspaces/Zuper-UDP/device_info/client.in")
 	errors.CheckError(err)
 	s := strings.Split(string(dat), "\n")
 	servIP, servPort, clientIP, clientPort, filename, window := s[0], s[1], s[2], s[3], s[4], s[5]
