@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 
@@ -13,6 +14,9 @@ import (
 )
 
 func main() {
+	//The algorithm to be used in reliability
+	algo := os.Args[1]
+
 	//Reading Server info from file
 	dat, err := ioutil.ReadFile("/home/mohamedmahmoud/Workspaces/Zuper-UDP/device_info/client.in")
 	errors.CheckError(err)
@@ -55,6 +59,6 @@ func main() {
 	//receive any packet from the server
 	for {
 		// fmt.Println("waiting anything from server ...")
-		socket.ReceiveFromServer(conn)
+		socket.ReceiveFromServer(conn, algo)
 	}
 }

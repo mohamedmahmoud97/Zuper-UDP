@@ -75,6 +75,7 @@ func reliableSend(packets []Packet, noChunks int, conn *net.UDPConn, window int,
 	case "sr":
 		SR(packets, noChunks, conn, addr, window)
 	}
+	fmt.Print("finished ... \n")
 }
 
 //ReceiveReqFromClients any packet
