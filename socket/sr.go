@@ -7,7 +7,7 @@ import (
 )
 
 //SR is the algorithm of selective-repeat
-func SR(packets []Packet, noChunks int, conn *net.UDPConn, servAddr *net.UDPAddr) {
+func SR(packets []Packet, noChunks int, conn *net.UDPConn, servAddr *net.UDPAddr, window int) {
 	for i := 0; i < noChunks; i++ {
 		b, err := msgpack.Marshal(&packets[i])
 		if err != nil {

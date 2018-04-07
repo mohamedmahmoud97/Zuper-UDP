@@ -7,11 +7,6 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
-var (
-	//AckCheck is a channel for receiving seqno of ack packets
-	AckCheck = make(chan uint32)
-)
-
 //SW is the algorithm of stop-and-wait
 func SW(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr) {
 	for i := 0; i < noChunks; i++ {
@@ -30,6 +25,7 @@ func SW(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr) {
 		// 	_, err = conn.WriteToUDP(b, addr)
 		// }
 
+		//if received ack for the last packet
 		if <-AckCheck == uint32(i) {
 		}
 

@@ -11,6 +11,11 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
+var (
+	//AckCheck is a channel for receiving seqno of ack packets
+	AckCheck = make(chan uint32)
+)
+
 //CreateSerSocket in the server-side
 func CreateSerSocket(servAddr *net.UDPAddr) *net.UDPConn {
 	//create the socket on the port number
@@ -66,9 +71,9 @@ func reliableSend(packets []Packet, noChunks int, conn *net.UDPConn, window int,
 	case "sw":
 		SW(packets, noChunks, conn, addr)
 	case "gbn":
-		GBN(packets, noChunks, conn, addr)
+		GBN(packets, noChunks, conn, addr, window)
 	case "sr":
-		SR(packets, noChunks, conn, addr)
+		SR(packets, noChunks, conn, addr, window)
 	}
 }
 
