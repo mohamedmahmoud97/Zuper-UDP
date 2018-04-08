@@ -10,9 +10,9 @@ import (
 
 var (
 	//RecData is the buffer of all data received
-	RecData = make([][]byte, 1024)
-	lastAck uint32
-	buffer  = make(map[uint32][]byte)
+	RecData       = make([][]byte, 1024)
+	lastAck int32 = -1
+	buffer        = make(map[uint32][]byte)
 )
 
 //CreateClientSocket in client-side
@@ -22,7 +22,7 @@ func CreateClientSocket(localAddr, servAddr *net.UDPAddr) *net.UDPConn {
 	return conn
 }
 
-//SendToServer packets
+//SendToServer the filename of the needed file
 func SendToServer(conn *net.UDPConn, window int, filename string) {
 	fmt.Printf("hello the client is requesting file %v from server ... \n", filename)
 
@@ -75,19 +75,20 @@ func ReceiveFromServer(conn *net.UDPConn, algo string) {
 		if algo == "sw" {
 			go sendResponse(conn, addr, &packet)
 		} else if algo == "gbn" {
-			if packet.Seqno == lastAck+1 {
-				lastAck = packet.Seqno
+			if int32(packet.Seqno) == lastAck+1 {
+				lastAck = int32(packet.Seqno)
+				fmt.Printf("last ack packet is %v\n", lastAck)
 				go sendResponse(conn, addr, &packet)
-			} else {
+			} else if int32(packet.Seqno) > lastAck+1 && lastAck != -1 {
 				//change seqno of ack packet to last delivered packet
-				packet.Seqno = lastAck
+				packet.Seqno = uint32(lastAck)
 				go sendResponse(conn, addr, &packet)
+			} else if int32(packet.Seqno) > lastAck+1 && lastAck == -1 {
+
 			}
 		} else if algo == "sr" {
 			buffer[packet.Seqno] = packet.Data
 			go sendResponse(conn, addr, &packet)
 		}
-
 	}
-
 }

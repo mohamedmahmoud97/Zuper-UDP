@@ -23,35 +23,14 @@ func SW(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, pl
 		fmt.Printf("Sent packet %v ... \n", i)
 
 		start := time.Now()
-		quit := make(chan int)
+		quit := make(chan uint32)
 
 		//check if the time exceeded or it received the ack
-		go timeAch(start, quit)
-		goSend := resendPck(quit)
+		go timeAch(start, quit, uint32(i))
+		_, goSend := resendPck(quit)
 
 		if goSend {
 			_, err = conn.WriteToUDP(b, addr)
 		}
-	}
-}
-
-// check if time exceeded 0.1 sec
-func timeAch(start time.Time, quit chan int) {
-	for {
-		elapsed := time.Since(start)
-		if elapsed > 100000000 {
-			quit <- 0
-		}
-	}
-}
-
-// check if we have to resend the packet or not
-func resendPck(quit chan int) bool {
-	select {
-	case <-AckCheck:
-		return false
-	case <-quit:
-		fmt.Println("time exceeded ...")
-		return true
 	}
 }

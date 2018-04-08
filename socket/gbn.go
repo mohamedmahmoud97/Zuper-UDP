@@ -1,20 +1,22 @@
 package socket
 
 import (
-	"fmt"
 	"net"
+	"time"
 )
 
 // a map to give a value for all packets
 // 0 = unsent, 1 = sent, 2 = sent and rcved ack
 var (
-	ackPack = make(map[int]int)
+	ackPack  = make(map[int]int)
+	pckTimer = make(map[int]time.Time)
 )
 
 //GBN is the go-back-n algorithm
 func GBN(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, window int, plp float32) {
 
 	start := 0
+	quit := make(chan uint32, window)
 
 	//make all the chunks have value 0 as unack
 	for i := 0; i < noChunks; i++ {
@@ -22,27 +24,46 @@ func GBN(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, w
 	}
 
 	//send the first packets with the window size
-	sendWinPack(start, window, packets, conn, addr, noChunks)
+	sendWinPack(start, window, packets, conn, addr, noChunks, plp, quit)
 
 	//loop until all the packets are sent and received their ack
 	for (start + 3) < noChunks {
-		ackpckt := int(<-AckCheck)
+		duration := 10 * time.Millisecond
+		time.Sleep(duration)
 
-		if ackpckt == start {
-			ackPack[ackpckt] = 2
-			start = getNextStart(start, noChunks)
-			if start != -1 {
-				sendWinPack(start, window, packets, conn, addr, noChunks)
+		// check if time exceeded or we received a new ack packet
+		pcktseqno, goResend := resendPck(quit)
+		ackpckt := int(pcktseqno)
+
+		if !goResend {
+			if ackpckt == start {
+				ackPack[ackpckt] = 2
+				start = getNextStart(start, noChunks)
+				if start != -1 {
+					sendWinPack(start, window, packets, conn, addr, noChunks, plp, quit)
+				}
+			} else if ackPack[ackpckt] == 1 {
+				ackPack[ackpckt] = 2
+				nextUnSent := getNextStart(ackpckt, noChunks)
+				if nextUnSent < start+4 && nextUnSent != -1 {
+					sendWinPack(start, 1, packets, conn, addr, noChunks, plp, quit)
+				}
+			} else if ackPack[ackpckt] == 2 {
+				// ackPack[ackpckt] = 0
+				// fmt.Print("Resending packets ... \n")
+				// sendWinPack(start, window, packets, conn, addr, noChunks, plp, quit)
 			}
-		} else if ackPack[ackpckt] == 1 {
-			ackPack[ackpckt] = 2
-			nextUnSent := getNextStart(ackpckt, noChunks)
-			if nextUnSent < start+4 && nextUnSent != -1 {
-				sendWinPack(start, 1, packets, conn, addr, noChunks)
-			}
-		} else if ackPack[ackpckt] == 2 {
-			fmt.Print("Resending packets ... \n")
-			sendWinPack(start, window, packets, conn, addr, noChunks)
+		} else {
+			// fmt.Printf("will resend packet with seqno %v\n", ackpckt)
+			reset(start, ackpckt, window, quit)
+			// ackPack[ackpckt] = 0
+			sendWinPack(start, window, packets, conn, addr, noChunks, plp, quit)
 		}
+	}
+}
+
+func reset(start int, ackpckt int, window int, quit chan uint32) {
+	for i := ackpckt; i < start+window; i++ {
+		ackPack[int(i)] = 0
 	}
 }

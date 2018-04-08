@@ -3,22 +3,36 @@ package socket
 import (
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/vmihailenco/msgpack"
 )
 
+var (
+	prob int
+)
+
 //send a package of packets with the size of the window
 //used when start and after changing the start
-func sendWinPack(start int, window int, packets []Packet, conn *net.UDPConn, addr *net.UDPAddr, noChunks int) {
+func sendWinPack(start int, window int, packets []Packet, conn *net.UDPConn, addr *net.UDPAddr, noChunks int, plp float32, quit chan uint32) {
 	for i := start; i < start+window && i < noChunks; i++ {
 		if ackPack[i] == 0 {
 			b, err := msgpack.Marshal(&packets[i])
 			if err != nil {
 				panic(err)
 			}
-			_, err = conn.WriteToUDP(b, addr)
-			ackPack[i] = 1
-			fmt.Printf("Sent packet %v ... \n", i)
+
+			//drop packets with probability plp
+			if prob%int(plp*100) != 0 {
+				_, err = conn.WriteToUDP(b, addr)
+				ackPack[i] = 1
+				fmt.Printf("Sent packet %v ... \n", i)
+			}
+			prob++
+
+			// set timer for each packet
+			pckTimer[i] = time.Now()
+			go timeAch(pckTimer[i], quit, uint32(i))
 		}
 	}
 }
@@ -33,4 +47,28 @@ func getNextStart(start int, noChunks int) int {
 	}
 	//return -1 if it finished sending all packets
 	return -1
+}
+
+// check if time exceeded 0.5 sec
+func timeAch(start time.Time, quit chan uint32, seqno uint32) {
+	for {
+		elapsed := time.Since(start)
+		if elapsed > 100000000 {
+			if ackPack[int(seqno)] != 2 {
+				fmt.Printf("time exceeded for pckt %v\n", seqno)
+				quit <- seqno
+			}
+			return
+		}
+	}
+}
+
+// check if we have to resend the packet or not
+func resendPck(quit chan uint32) (uint32, bool) {
+	select {
+	case ackseqno := <-AckCheck:
+		return ackseqno, false
+	case timeoutpck := <-quit:
+		return timeoutpck, true
+	}
 }
