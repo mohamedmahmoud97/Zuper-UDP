@@ -49,16 +49,21 @@ func getNextStart(start int, noChunks int) int {
 	return -1
 }
 
-// check if time exceeded 0.5 sec
+// check if time exceeded 0.1 sec
 func timeAch(start time.Time, quit chan uint32, seqno uint32) {
 	for {
-		elapsed := time.Since(start)
-		if elapsed > 100000000 {
-			if ackPack[int(seqno)] != 2 {
-				fmt.Printf("time exceeded for pckt %v\n", seqno)
-				quit <- seqno
-			}
+		select {
+		case <-quit:
 			return
+		default:
+			elapsed := time.Since(start)
+			if elapsed > 100000000 {
+				if ackPack[int(seqno)] != 2 {
+					fmt.Printf("time exceeded for pckt %v\n", seqno)
+					quit <- seqno
+				}
+				return
+			}
 		}
 	}
 }

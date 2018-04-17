@@ -8,6 +8,10 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
+var (
+	probcount int
+)
+
 //SW is the algorithm of stop-and-wait
 func SW(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, plp float32) {
 	for i := 0; i < noChunks; i++ {
@@ -17,10 +21,12 @@ func SW(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, pl
 		}
 
 		//drop packets with probability plp
-		if i%int(plp*100) != 0 {
+		if probcount%int(plp*100) != 0 {
 			_, err = conn.WriteToUDP(b, addr)
+			fmt.Printf("Sent packet %v ... \n", i)
+		} else {
+			fmt.Printf("Sent packet %v but dropped ... \n", i)
 		}
-		fmt.Printf("Sent packet %v ... \n", i)
 
 		start := time.Now()
 		quit := make(chan uint32)
@@ -30,7 +36,12 @@ func SW(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, pl
 		_, goSend := resendPck(quit)
 
 		if goSend {
-			_, err = conn.WriteToUDP(b, addr)
+			i = i - 1
+		} else if !goSend {
+			quit <- uint32(i)
 		}
+
+		//increment probcount
+		probcount++
 	}
 }
