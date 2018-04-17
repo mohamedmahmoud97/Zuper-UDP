@@ -1,10 +1,7 @@
 package socket
 
 import (
-	"fmt"
 	"net"
-
-	"github.com/vmihailenco/msgpack"
 )
 
 //SR is the algorithm of selective-repeat
@@ -21,7 +18,7 @@ func SR(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, wi
 	sendWinPack(start, window, packets, conn, addr, noChunks, plp, quit)
 
 	//loop until all the packets are sent and received their ack
-	for (start + 3) < noChunks {
+	for (start) < noChunks {
 		// check if time exceeded or we received a new ack packet
 		pcktseqno, goResend := resendPck(quit)
 		ackpckt := int(pcktseqno)
@@ -40,15 +37,17 @@ func SR(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, wi
 					sendWinPack(start, 1, packets, conn, addr, noChunks, plp, quit)
 				}
 			} else if ackPack[ackpckt] == 2 {
-				fmt.Print("Resending packets ... \n")
-				sendWinPack(start, window, packets, conn, addr, noChunks, plp, quit)
+				// fmt.Print("Resending packets ... \n")
+				// sendWinPack(start, window, packets, conn, addr, noChunks, plp, quit)
 			}
 		} else {
-			b, err := msgpack.Marshal(&packets[pcktseqno])
-			if err != nil {
-				panic(err)
-			}
-			_, err = conn.WriteToUDP(b, addr)
+			ackPack[ackpckt] = 0
+			sendWinPack(start, 1, packets, conn, addr, noChunks, plp, quit)
+			// b, err := msgpack.Marshal(&packets[pcktseqno])
+			// if err != nil {
+			// 	panic(err)
+			// }
+			// _, err = conn.WriteToUDP(b, addr)
 		}
 	}
 }

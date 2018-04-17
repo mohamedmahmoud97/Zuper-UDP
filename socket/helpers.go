@@ -27,6 +27,8 @@ func sendWinPack(start int, window int, packets []Packet, conn *net.UDPConn, add
 				_, err = conn.WriteToUDP(b, addr)
 				ackPack[i] = 1
 				fmt.Printf("Sent packet %v ... \n", i)
+			} else {
+				fmt.Printf("Sent packet %v but dropped ... \n", i)
 			}
 			prob++
 
