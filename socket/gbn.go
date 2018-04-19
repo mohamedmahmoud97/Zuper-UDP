@@ -45,19 +45,14 @@ func GBN(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, w
 					sendWinPack(start, 1, packets, conn, addr, noChunks, plp, quit)
 				}
 			} else if ackPack[ackpckt] == 2 {
-				// fmt.Print("Resending packets ... \n")
-				// sendWinPack(start, window, packets, conn, addr, noChunks, plp, quit)
+
 			}
 		} else {
 			reset(start, ackpckt, window, quit)
 			sendWinPack(start, window, packets, conn, addr, noChunks, plp, quit)
-			// b, err := msgpack.Marshal(&packets[pcktseqno])
-			// if err != nil {
-			// 	panic(err)
-			// }
-			// _, err = conn.WriteToUDP(b, addr)
 		}
 	}
+	start = 0
 }
 
 func reset(start int, ackpckt int, window int, quit chan uint32) {

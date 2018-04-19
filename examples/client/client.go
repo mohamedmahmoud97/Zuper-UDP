@@ -41,12 +41,7 @@ func main() {
 	// initialize all connections
 	servAddr, err := net.ResolveUDPAddr("udp", sAddress.String())
 	errors.CheckError(err)
-	//listenAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:10002")
-	errors.CheckError(err)
 	localAddr, err := net.ResolveUDPAddr("udp", cAddress.String())
-	errors.CheckError(err)
-
-	//servConn, err := net.ListenUDP("udp", listenAddr)
 	errors.CheckError(err)
 
 	//create the socket between the client and the server
@@ -58,7 +53,6 @@ func main() {
 
 	//receive any packet from the server
 	for {
-		// fmt.Println("waiting anything from server ...")
 		socket.ReceiveFromServer(conn, algo)
 	}
 }

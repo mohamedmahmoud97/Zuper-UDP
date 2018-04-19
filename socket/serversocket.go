@@ -51,7 +51,11 @@ func sendToClient(conn *net.UDPConn, window int, addr *net.UDPAddr, algo, filena
 	for seqNum < noChunks {
 		chunk := dataBytes[previous:r]
 		noOfBytes := uint16(len(chunk))
-		piko := Packet{Data: chunk, Len: noOfBytes, Seqno: seqNum}
+		piko := Packet{}
+		piko.Data = chunk
+		piko.Len = noOfBytes
+		piko.Seqno = seqNum
+		piko.pckNo = uint16(noChunks)
 		packets = append(packets, piko)
 		//making packets
 		fmt.Printf("making packet %d ...\n", seqNum)

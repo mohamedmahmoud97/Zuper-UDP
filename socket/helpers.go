@@ -22,6 +22,12 @@ func sendWinPack(start int, window int, packets []Packet, conn *net.UDPConn, add
 				panic(err)
 			}
 
+			var packet Packet
+			err = msgpack.Unmarshal(b, &packet)
+			if err != nil {
+				panic(err)
+			}
+
 			//drop packets with probability plp
 			if prob%int(plp*100) != 0 {
 				_, err = conn.WriteToUDP(b, addr)
