@@ -124,7 +124,7 @@ func buildFile() {
 
 func checkOnPck(packet *Packet) {
 	if packet.Seqno == 0 {
-		pckNo = packet.Cksum
+		pckNo = packet.pckNo
 	} else if int(packet.Seqno) == int(pckNo)-1 {
 		buildFile()
 	}
