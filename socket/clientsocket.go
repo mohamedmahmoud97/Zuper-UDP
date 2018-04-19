@@ -5,19 +5,23 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"time"
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
 	"github.com/vmihailenco/msgpack"
 )
 
 var (
+	//AckFileCheck is channel on receiving ack on file request
+	AckFileCheck = make(chan int)
 	//RecData is the buffer of all data received
 	RecData           = make([]byte, pckNo*512)
 	lastAck     int32 = -1
 	buffer            = make(map[uint32][]byte)
-	corruptProb float32
+	corruptProb int
 	fileName    string
 	pckNo       uint16
+	plp         float32
 )
 
 //CreateClientSocket in client-side
@@ -28,14 +32,16 @@ func CreateClientSocket(localAddr, servAddr *net.UDPAddr) *net.UDPConn {
 }
 
 //SendToServer the filename of the needed file
-func SendToServer(conn *net.UDPConn, window int, filename string) {
+func SendToServer(conn *net.UDPConn, window int, filename string, prob float32) {
+	plp = prob
+
 	fmt.Printf("hello the client is requesting file %v from server ... \n", filename)
 	fileName = filename
 
 	file := []byte(filename)
 
 	noOfBytes := uint16(len(file))
-	reqPacket := Packet{Data: file, pckNo: 1, Len: noOfBytes}
+	reqPacket := Packet{Data: file, Cksum: 1, Len: noOfBytes}
 
 	b, err := msgpack.Marshal(&reqPacket)
 	if err != nil {
@@ -44,8 +50,22 @@ func SendToServer(conn *net.UDPConn, window int, filename string) {
 
 	fmt.Println("Encoded the message ...")
 
+	//send the message to the server
 	_, err = conn.Write(b)
 	errors.CheckError(err)
+
+	start := time.Now()
+	quit := make(chan uint32)
+
+	//check if the time exceeded or it received the ack
+	go fileTimer(start, quit)
+	goSend := resendReq(quit)
+
+	if goSend {
+		SendToServer(conn, window, filename, prob)
+	} else if !goSend {
+		quit <- 0
+	}
 }
 
 func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *Packet) {
@@ -61,21 +81,16 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *Packet) {
 }
 
 //ReceiveFromServer any ack packet
-func ReceiveFromServer(conn *net.UDPConn, algo string) {
+func ReceiveFromServer(conn *net.UDPConn, buf []byte, addr *net.UDPAddr, algo string) {
+	var packet Packet
 
-	//Read data from server socket
-	buf := make([]byte, 600)
-	length, addr, err := conn.ReadFromUDP(buf[0:])
-	errors.CheckError(err)
+	err := msgpack.Unmarshal(buf, &packet)
+	if err != nil {
+		panic(err)
+	}
 
-	if length > 0 {
-		var packet Packet
-
-		err := msgpack.Unmarshal(buf, &packet)
-		if err != nil {
-			panic(err)
-		}
-
+	//drop packets with probability plp
+	if corruptProb%int(plp*100) != 0 {
 		fmt.Printf("Delivered packet with seqno %v \n", packet.Seqno)
 
 		if algo == "sw" {
@@ -102,8 +117,18 @@ func ReceiveFromServer(conn *net.UDPConn, algo string) {
 			go sendResponse(conn, addr, &packet)
 			checkOnPck(&packet)
 		}
-
+	} else {
+		fmt.Printf("Corrupted packet %v and not Acked ... \n", packet.Seqno)
 	}
+	corruptProb++
+}
+
+//ReceiveAckFromServer any packet
+func ReceiveAckFromServer() {
+	fmt.Printf("Received Ack of requested file packet ... \n")
+
+	//a channel for sending seqno
+	AckFileCheck <- 1
 }
 
 ///append to buffer to build file later on
@@ -124,7 +149,7 @@ func buildFile() {
 
 func checkOnPck(packet *Packet) {
 	if packet.Seqno == 0 {
-		pckNo = packet.pckNo
+		pckNo = packet.Cksum
 	} else if int(packet.Seqno) == int(pckNo)-1 {
 		buildFile()
 	}

@@ -55,7 +55,7 @@ func sendToClient(conn *net.UDPConn, window int, addr *net.UDPAddr, algo, filena
 		piko.Data = chunk
 		piko.Len = noOfBytes
 		piko.Seqno = seqNum
-		piko.pckNo = uint16(noChunks)
+		piko.Cksum = uint16(noChunks)
 		packets = append(packets, piko)
 		//making packets
 		fmt.Printf("making packet %d ...\n", seqNum)
@@ -82,6 +82,18 @@ func reliableSend(packets []Packet, noChunks int, conn *net.UDPConn, window int,
 	fmt.Print("finished ... \n")
 }
 
+func sendAckToClient(conn *net.UDPConn, addr *net.UDPAddr) {
+	ack := AckPacket{Seqno: 0}
+
+	b, err := msgpack.Marshal(&ack)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = conn.WriteToUDP(b, addr)
+	errors.CheckError(err)
+}
+
 //ReceiveReqFromClients any packet
 func ReceiveReqFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.UDPAddr, windowSize int, algo string, plp float32) {
 	var packet Packet
@@ -95,6 +107,7 @@ func ReceiveReqFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.
 	filename := string(packet.Data[:n])
 	fmt.Printf("requested the filename: %v", filename)
 
+	sendAckToClient(conn, addr)
 	sendToClient(conn, windowSize, addr, algo, filename, plp)
 }
 

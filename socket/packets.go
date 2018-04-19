@@ -4,7 +4,7 @@ package socket
 type Packet struct {
 	//Header
 	Seqno      uint32
-	pckNo, Len uint16
+	Cksum, Len uint16
 	//Data
 	Data []byte
 }

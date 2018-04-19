@@ -13,6 +13,12 @@ import (
 	socket "github.com/mohamedmahmoud97/Zuper-UDP/socket"
 )
 
+func convertToFloat(s string) float32 {
+	value, err := strconv.ParseFloat(s, 32)
+	errors.CheckError(err)
+	return float32(value)
+}
+
 func main() {
 	//The algorithm to be used in reliability
 	algo := os.Args[1]
@@ -21,11 +27,10 @@ func main() {
 	dat, err := ioutil.ReadFile("/home/mohamedmahmoud/Workspaces/Zuper-UDP/device_info/client.in")
 	errors.CheckError(err)
 	s := strings.Split(string(dat), "\n")
-	servIP, servPort, clientIP, clientPort, filename, window := s[0], s[1], s[2], s[3], s[4], s[5]
+	servIP, servPort, clientIP, clientPort, filename, window, prob := s[0], s[1], s[2], s[3], s[4], s[5], s[6]
 
 	initWindow, err := strconv.Atoi(window)
-
-	fmt.Println(initWindow, filename)
+	plp := convertToFloat(prob)
 
 	//joining the IP address to the port
 	var sAddress bytes.Buffer
@@ -49,10 +54,19 @@ func main() {
 	defer conn.Close()
 
 	//send the filename to the server
-	go socket.SendToServer(conn, initWindow, filename)
+	go socket.SendToServer(conn, initWindow, filename, plp)
 
-	//receive any packet from the server
+	// go read from the connection
 	for {
-		socket.ReceiveFromServer(conn, algo)
+		buf := make([]byte, 600)
+		length, addr, err := conn.ReadFromUDP(buf[0:])
+		errors.CheckError(err)
+
+		if length > 25 {
+			fmt.Print("receiving data packet from server ... \n")
+			go socket.ReceiveFromServer(conn, buf, addr, algo)
+		} else if length > 0 && length < 25 {
+			go socket.ReceiveAckFromServer()
+		}
 	}
 }
