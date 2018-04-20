@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"sort"
 	"time"
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
@@ -18,7 +19,7 @@ var (
 	//RecData is the buffer of all data received
 	RecData           = make([]byte, pckNo*512)
 	lastAck     int32 = -1
-	buffer            = make(map[uint32][]byte)
+	buffer            = make(map[int][]byte)
 	corruptProb int
 	fileName    string
 	pckNo       uint16
@@ -41,7 +42,7 @@ func SendToServer(conn *net.UDPConn, window int, filename string, prob float32, 
 	log.SetOutput(flogC)
 	log.Printf("The client is requesting file %v from server ... \n", filename)
 
-	fmt.Printf("hello the client is requesting file %v from server ... \n", filename)
+	fmt.Printf("the client is requesting file %v from server ... \n", filename)
 	fileName = filename
 
 	file := []byte(filename)
@@ -56,6 +57,7 @@ func SendToServer(conn *net.UDPConn, window int, filename string, prob float32, 
 
 	log.SetOutput(flogC)
 	log.Println("Encoded the message ...")
+
 	fmt.Println("Encoded the message ...")
 
 	//send the message to the server
@@ -103,15 +105,15 @@ func ReceiveFromServer(conn *net.UDPConn, buf []byte, addr *net.UDPAddr, algo st
 
 	if algo == "sw" {
 		go sendResponse(conn, addr, &packet)
-		appendFile(packet.Data)
-		checkOnPck(&packet)
+		appendFile(packet.Data, packet.Seqno)
+		checkOnPck(&packet, algo)
 	} else if algo == "gbn" {
 		if int32(packet.Seqno) == lastAck+1 {
 			lastAck = int32(packet.Seqno)
 			fmt.Printf("last ack packet is %v\n", lastAck)
-			appendFile(packet.Data)
+			appendFile(packet.Data, packet.Seqno)
 			go sendResponse(conn, addr, &packet)
-			checkOnPck(&packet)
+			checkOnPck(&packet, algo)
 		} else if int32(packet.Seqno) > lastAck+1 && lastAck != -1 {
 			//change seqno of ack packet to last delivered packet
 			packet.Seqno = uint32(lastAck)
@@ -120,9 +122,9 @@ func ReceiveFromServer(conn *net.UDPConn, buf []byte, addr *net.UDPAddr, algo st
 
 		}
 	} else if algo == "sr" {
-		appendFile(packet.Data)
+		appendFile(packet.Data, packet.Seqno)
 		go sendResponse(conn, addr, &packet)
-		checkOnPck(&packet)
+		checkOnPck(&packet, algo)
 	}
 }
 
@@ -137,17 +139,39 @@ func ReceiveAckFromServer() {
 }
 
 ///append to buffer to build file later on
-func appendFile(data []byte) {
-	for i := 0; i < len(data); i++ {
-		RecData = append(RecData, data[i])
-	}
+func appendFile(data []byte, seqno uint32) {
+	buffer[int(seqno)] = data
 }
 
 //build the requested file at the client-side
-func buildFile() {
+func buildFile(algo string) {
 	log.SetOutput(flogC)
 	log.Println("Building File ... ")
 	fmt.Println("Building File ... ")
+
+	if algo != "sw" {
+		// To store the keys in slice in sorted order
+		var keys []int
+		for k := range buffer {
+			keys = append(keys, k)
+		}
+		sort.Ints(keys)
+
+		// to store sorted buffer
+		for _, k := range keys {
+			for i := 0; i < len(buffer[k]); i++ {
+				RecData = append(RecData, buffer[k][i])
+			}
+		}
+	} else {
+		// for sw algorithm no sorting just putting buffer to file
+		for k := range buffer {
+			for i := 0; i < len(buffer[k]); i++ {
+				RecData = append(RecData, buffer[k][i])
+			}
+		}
+	}
+
 	err := ioutil.WriteFile(fileName, RecData, 0644)
 	errors.CheckError(err)
 	log.SetOutput(flogC)
@@ -156,10 +180,10 @@ func buildFile() {
 	os.Exit(0)
 }
 
-func checkOnPck(packet *Packet) {
+func checkOnPck(packet *Packet, algo string) {
 	if packet.Seqno == 0 {
 		pckNo = packet.Cksum
 	} else if int(packet.Seqno) == int(pckNo)-1 {
-		buildFile()
+		buildFile(algo)
 	}
 }
