@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
@@ -53,8 +52,13 @@ func main() {
 	conn := socket.CreateClientSocket(localAddr, servAddr)
 	defer conn.Close()
 
+	//create logfile
+	flogC, err := os.OpenFile("clientlog", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	errors.CheckError(err)
+	defer flogC.Close()
+
 	//send the filename to the server
-	go socket.SendToServer(conn, initWindow, filename, plp)
+	go socket.SendToServer(conn, initWindow, filename, plp, flogC)
 
 	// go read from the connection
 	for {
@@ -63,7 +67,6 @@ func main() {
 		errors.CheckError(err)
 
 		if length > 25 {
-			fmt.Print("receiving data packet from server ... \n")
 			go socket.ReceiveFromServer(conn, buf, addr, algo)
 		} else if length > 0 && length < 25 {
 			go socket.ReceiveAckFromServer()

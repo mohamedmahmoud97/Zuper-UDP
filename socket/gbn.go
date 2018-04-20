@@ -34,18 +34,20 @@ func GBN(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, w
 		if !goResend {
 			if ackpckt == start {
 				ackPack[ackpckt] = 2
+				time.Sleep(1 * time.Millisecond)
 				start = getNextStart(start, noChunks)
 				if start != -1 {
 					sendWinPack(start, window, packets, conn, addr, noChunks, plp, quit)
 				}
 			} else if ackPack[ackpckt] == 1 {
 				ackPack[ackpckt] = 2
+				time.Sleep(1 * time.Millisecond)
 				nextUnSent := getNextStart(ackpckt, noChunks)
-				if nextUnSent < start+4 && nextUnSent != -1 {
+				if nextUnSent < start+window && nextUnSent != -1 {
 					sendWinPack(start, 1, packets, conn, addr, noChunks, plp, quit)
 				}
 			} else if ackPack[ackpckt] == 2 {
-
+				time.Sleep(1 * time.Millisecond)
 			}
 		} else {
 			reset(start, ackpckt, window, quit)
@@ -56,8 +58,11 @@ func GBN(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, w
 }
 
 func reset(start int, ackpckt int, window int, quit chan uint32) {
-	for i := ackpckt; i < start+window; i++ {
-		ackPack[int(i)] = 0
+	for i := start; i < start+window; i++ {
+		if ackPack[i] != 2 {
+			ackPack[i] = 0
+			time.Sleep(1 * time.Millisecond)
+		}
 		quit <- uint32(i)
 	}
 }

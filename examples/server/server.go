@@ -61,8 +61,13 @@ func main() {
 	fmt.Printf("connection in server on port %v", servAddr)
 	errors.CheckError(err)
 
+	//create logfile
+	flogC, err := os.OpenFile("serverlog", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	errors.CheckError(err)
+	defer flogC.Close()
+
 	//create the socket in server-side
-	servConn := socket.CreateSerSocket(servAddr)
+	servConn := socket.CreateSerSocket(servAddr, flogC)
 
 	defer servConn.Close()
 

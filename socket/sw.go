@@ -2,6 +2,7 @@ package socket
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"time"
 
@@ -23,8 +24,12 @@ func SW(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, pl
 		//drop packets with probability plp
 		if probcount%int(plp*100) != 0 {
 			_, err = conn.WriteToUDP(b, addr)
+			log.SetOutput(flogS)
+			log.Printf("Sent packet %v ... \n", i)
 			fmt.Printf("Sent packet %v ... \n", i)
 		} else {
+			log.SetOutput(flogS)
+			log.Printf("Sent packet %v but dropped ... \n", i)
 			fmt.Printf("Sent packet %v but dropped ... \n", i)
 		}
 

@@ -2,7 +2,9 @@ package socket
 
 import (
 	"fmt"
+	"log"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/vmihailenco/msgpack"
@@ -10,6 +12,7 @@ import (
 
 var (
 	prob int
+	lock = sync.RWMutex{}
 )
 
 //send a package of packets with the size of the window
@@ -17,6 +20,7 @@ var (
 func sendWinPack(start int, window int, packets []Packet, conn *net.UDPConn, addr *net.UDPAddr, noChunks int, plp float32, quit chan uint32) {
 	for i := start; i < start+window && i < noChunks; i++ {
 		if ackPack[i] == 0 {
+			time.Sleep(1 * time.Millisecond)
 			b, err := msgpack.Marshal(&packets[i])
 			if err != nil {
 				panic(err)
@@ -26,8 +30,13 @@ func sendWinPack(start int, window int, packets []Packet, conn *net.UDPConn, add
 			if prob%int(plp*100) != 0 {
 				_, err = conn.WriteToUDP(b, addr)
 				ackPack[i] = 1
+				// time.Sleep(1 * time.Millisecond)
+				log.SetOutput(flogS)
+				log.Printf("Sent packet %v ... \n", i)
 				fmt.Printf("Sent packet %v ... \n", i)
 			} else {
+				log.SetOutput(flogS)
+				log.Printf("Sent packet %v but dropped ... \n", i)
 				fmt.Printf("Sent packet %v but dropped ... \n", i)
 			}
 			prob++
@@ -60,7 +69,10 @@ func timeAch(start time.Time, quit chan uint32, seqno uint32) {
 		default:
 			elapsed := time.Since(start)
 			if elapsed > 100000000 {
+				// time.Sleep(1 * time.Millisecond)
 				if ackPack[int(seqno)] != 2 {
+					log.SetOutput(flogS)
+					log.Printf("time exceeded for pckt %v\n", seqno)
 					fmt.Printf("time exceeded for pckt %v\n", seqno)
 					quit <- seqno
 				}

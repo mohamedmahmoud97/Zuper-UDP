@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math"
 	"net"
+	"os"
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
 	"github.com/vmihailenco/msgpack"
@@ -14,10 +16,13 @@ import (
 var (
 	//AckCheck is a channel for receiving seqno of ack packets
 	AckCheck = make(chan uint32)
+	flogS    *os.File
 )
 
 //CreateSerSocket in the server-side
-func CreateSerSocket(servAddr *net.UDPAddr) *net.UDPConn {
+func CreateSerSocket(servAddr *net.UDPAddr, flog *os.File) *net.UDPConn {
+	flogS = flog
+
 	//create the socket on the port number
 	servConn, err := net.ListenUDP("udp", servAddr)
 	errors.CheckError(err)
@@ -57,12 +62,12 @@ func sendToClient(conn *net.UDPConn, window int, addr *net.UDPAddr, algo, filena
 		piko.Seqno = seqNum
 		piko.Cksum = uint16(noChunks)
 		packets = append(packets, piko)
-		//making packets
-		fmt.Printf("making packet %d ...\n", seqNum)
 		seqNum++
 		previous += size
 		r += size
 	}
+	log.SetOutput(flogS)
+	log.Printf("Made %v packets ... \n", noChunks)
 
 	noOfChunks := int(noChunks)
 
@@ -79,6 +84,8 @@ func reliableSend(packets []Packet, noChunks int, conn *net.UDPConn, window int,
 	case "sr":
 		SR(packets, noChunks, conn, addr, window, plp)
 	}
+	log.SetOutput(flogS)
+	log.Println("Finished ... ")
 	fmt.Print("finished ... \n")
 }
 
@@ -105,6 +112,8 @@ func ReceiveReqFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.
 
 	n := len(packet.Data)
 	filename := string(packet.Data[:n])
+	log.SetOutput(flogS)
+	log.Printf("A client requested filename: %v \n", filename)
 	fmt.Printf("requested the filename: %v", filename)
 
 	sendAckToClient(conn, addr)
@@ -120,6 +129,8 @@ func ReceiveAckFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.
 		panic(err)
 	}
 
+	log.SetOutput(flogS)
+	log.Printf("Received Ack of packet with seqno %v \n", packet.Seqno)
 	fmt.Printf("Received Ack of packet with seqno %v \n", packet.Seqno)
 
 	//a channel for sending seqno

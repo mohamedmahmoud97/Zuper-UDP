@@ -2,6 +2,7 @@ package socket
 
 import (
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -14,6 +15,8 @@ func fileTimer(start time.Time, quit chan uint32) {
 		default:
 			elapsed := time.Since(start)
 			if elapsed > 100000000 {
+				log.SetOutput(flogC)
+				log.Println("time exceeded for file request pckt ack ...")
 				fmt.Printf("time exceeded for file request pckt ack ...\n")
 				quit <- 1
 				return
@@ -26,9 +29,13 @@ func fileTimer(start time.Time, quit chan uint32) {
 func resendReq(quit chan uint32) bool {
 	select {
 	case <-AckFileCheck:
+		log.SetOutput(flogC)
+		log.Println("Received an ack from the server ... ")
 		fmt.Println("Received an ack from the server ... ")
 		return false
 	case <-quit:
+		log.SetOutput(flogC)
+		log.Println("Will resend the requested file again ... ")
 		fmt.Println("Will resend the requested file again ... ")
 		return true
 	}

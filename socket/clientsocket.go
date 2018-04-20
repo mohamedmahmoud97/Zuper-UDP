@@ -3,6 +3,7 @@ package socket
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"os"
 	"time"
@@ -22,6 +23,7 @@ var (
 	fileName    string
 	pckNo       uint16
 	plp         float32
+	flogC       *os.File
 )
 
 //CreateClientSocket in client-side
@@ -32,8 +34,12 @@ func CreateClientSocket(localAddr, servAddr *net.UDPAddr) *net.UDPConn {
 }
 
 //SendToServer the filename of the needed file
-func SendToServer(conn *net.UDPConn, window int, filename string, prob float32) {
+func SendToServer(conn *net.UDPConn, window int, filename string, prob float32, flogc *os.File) {
 	plp = prob
+
+	flogC = flogc
+	log.SetOutput(flogC)
+	log.Printf("The client is requesting file %v from server ... \n", filename)
 
 	fmt.Printf("hello the client is requesting file %v from server ... \n", filename)
 	fileName = filename
@@ -48,6 +54,8 @@ func SendToServer(conn *net.UDPConn, window int, filename string, prob float32) 
 		panic(err)
 	}
 
+	log.SetOutput(flogC)
+	log.Println("Encoded the message ...")
 	fmt.Println("Encoded the message ...")
 
 	//send the message to the server
@@ -62,7 +70,7 @@ func SendToServer(conn *net.UDPConn, window int, filename string, prob float32) 
 	goSend := resendReq(quit)
 
 	if goSend {
-		SendToServer(conn, window, filename, prob)
+		SendToServer(conn, window, filename, prob, flogC)
 	} else if !goSend {
 		quit <- 0
 	}
@@ -89,42 +97,39 @@ func ReceiveFromServer(conn *net.UDPConn, buf []byte, addr *net.UDPAddr, algo st
 		panic(err)
 	}
 
-	//drop packets with probability plp
-	if corruptProb%int(plp*100) != 0 {
-		fmt.Printf("Delivered packet with seqno %v \n", packet.Seqno)
+	log.SetOutput(flogC)
+	log.Printf("Delivered packet with seqno %v \n", packet.Seqno)
+	fmt.Printf("Delivered packet with seqno %v \n", packet.Seqno)
 
-		if algo == "sw" {
-			go sendResponse(conn, addr, &packet)
-			appendFile(packet.Data)
-			checkOnPck(&packet)
-		} else if algo == "gbn" {
-			if int32(packet.Seqno) == lastAck+1 {
-				lastAck = int32(packet.Seqno)
-				fmt.Printf("last ack packet is %v\n", lastAck)
-				appendFile(packet.Data)
-				go sendResponse(conn, addr, &packet)
-				checkOnPck(&packet)
-			} else if int32(packet.Seqno) > lastAck+1 && lastAck != -1 {
-				//change seqno of ack packet to last delivered packet
-				packet.Seqno = uint32(lastAck)
-				go sendResponse(conn, addr, &packet)
-			} else if int32(packet.Seqno) > lastAck+1 && lastAck == -1 {
-
-			}
-		} else if algo == "sr" {
-			buffer[packet.Seqno] = packet.Data
+	if algo == "sw" {
+		go sendResponse(conn, addr, &packet)
+		appendFile(packet.Data)
+		checkOnPck(&packet)
+	} else if algo == "gbn" {
+		if int32(packet.Seqno) == lastAck+1 {
+			lastAck = int32(packet.Seqno)
+			fmt.Printf("last ack packet is %v\n", lastAck)
 			appendFile(packet.Data)
 			go sendResponse(conn, addr, &packet)
 			checkOnPck(&packet)
+		} else if int32(packet.Seqno) > lastAck+1 && lastAck != -1 {
+			//change seqno of ack packet to last delivered packet
+			packet.Seqno = uint32(lastAck)
+			go sendResponse(conn, addr, &packet)
+		} else if int32(packet.Seqno) > lastAck+1 && lastAck == -1 {
+
 		}
-	} else {
-		fmt.Printf("Corrupted packet %v and not Acked ... \n", packet.Seqno)
+	} else if algo == "sr" {
+		appendFile(packet.Data)
+		go sendResponse(conn, addr, &packet)
+		checkOnPck(&packet)
 	}
-	corruptProb++
 }
 
 //ReceiveAckFromServer any packet
 func ReceiveAckFromServer() {
+	log.SetOutput(flogC)
+	log.Println("Received Ack of requested file packet ...")
 	fmt.Printf("Received Ack of requested file packet ... \n")
 
 	//a channel for sending seqno
@@ -140,9 +145,13 @@ func appendFile(data []byte) {
 
 //build the requested file at the client-side
 func buildFile() {
+	log.SetOutput(flogC)
+	log.Println("Building File ... ")
 	fmt.Println("Building File ... ")
 	err := ioutil.WriteFile(fileName, RecData, 0644)
 	errors.CheckError(err)
+	log.SetOutput(flogC)
+	log.Println("Finished ... ")
 	fmt.Println("Finished ... ")
 	os.Exit(0)
 }

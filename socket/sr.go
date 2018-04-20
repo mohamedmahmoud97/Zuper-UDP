@@ -2,6 +2,7 @@ package socket
 
 import (
 	"net"
+	"time"
 )
 
 //SR is the algorithm of selective-repeat
@@ -26,12 +27,14 @@ func SR(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, wi
 		if !goResend {
 			if ackpckt == start {
 				ackPack[ackpckt] = 2
+				time.Sleep(1 * time.Millisecond)
 				start = getNextStart(start, noChunks)
 				if start != -1 {
 					sendWinPack(start, window, packets, conn, addr, noChunks, plp, quit)
 				}
 			} else if ackPack[ackpckt] == 1 {
 				ackPack[ackpckt] = 2
+				time.Sleep(1 * time.Millisecond)
 				nextUnSent := getNextStart(ackpckt, noChunks)
 				if nextUnSent < start+4 && nextUnSent != -1 {
 					sendWinPack(start, 1, packets, conn, addr, noChunks, plp, quit)
@@ -41,6 +44,7 @@ func SR(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, wi
 			}
 		} else {
 			ackPack[ackpckt] = 0
+			time.Sleep(1 * time.Millisecond)
 			sendWinPack(start, 1, packets, conn, addr, noChunks, plp, quit)
 		}
 	}
