@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -11,6 +12,23 @@ import (
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
 	server "github.com/mohamedmahmoud97/Zuper-UDP/server"
+)
+
+const (
+	// BANNER is what is printed for help/info output.
+	BANNER = ` 
+ _ _ _                          _    _ ___   _ __
+|_ _  | _   _ _ __   ___  _ __ | |  | |._ \ | ._ \
+   /  /| | | | ._ \ / _ \| '__|| |  | || \ || |_) |
+  /  /_| |_| | |_) | |_)/| |   | |__| ||_/ || .__/
+ /_ _ _|_ _ _| .__/ \_ _ |_|   |_ __ _|___/ |_|    v1.0  SERVER
+             |_|
+
+ A client-side udp reliable data transfer protocol
+
+
+
+`
 )
 
 //ServerInfo is a struct to server info
@@ -38,6 +56,14 @@ func convertToInt(s string) int16 {
 }
 
 func main() {
+	//print the logo to the terminal
+	flag.Usage = func() {
+		fmt.Fprint(os.Stderr, fmt.Sprintf(BANNER))
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+	flag.Usage()
+
 	//The algorithm to be used in reliability
 	algo := os.Args[1]
 
