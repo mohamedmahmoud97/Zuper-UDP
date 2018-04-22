@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
-	socket "github.com/mohamedmahmoud97/Zuper-UDP/socket"
+	server "github.com/mohamedmahmoud97/Zuper-UDP/server"
 )
 
 //ServerInfo is a struct to server info
@@ -56,8 +56,8 @@ func main() {
 	address.WriteString(":")
 	address.WriteString(port)
 
-	server := ServerInfo{address.String(), windowSize}
-	servAddr, err := net.ResolveUDPAddr("udp", server.PortNumber)
+	serverInfo := ServerInfo{address.String(), windowSize}
+	servAddr, err := net.ResolveUDPAddr("udp", serverInfo.PortNumber)
 	fmt.Printf("connection in server on port %v", servAddr)
 	errors.CheckError(err)
 
@@ -67,7 +67,7 @@ func main() {
 	defer flogC.Close()
 
 	//create the socket in server-side
-	servConn := socket.CreateSerSocket(servAddr, flogC)
+	servConn := server.CreateSerSocket(servAddr, flogC)
 
 	defer servConn.Close()
 
@@ -79,9 +79,9 @@ func main() {
 
 		if length > 25 {
 			fmt.Print("receiving data packet from clients ... \n")
-			go socket.ReceiveReqFromClients(servConn, buf, length, addr, windowSize, algo, p)
+			go server.ReceiveReqFromClients(servConn, buf, length, addr, windowSize, algo, p)
 		} else if length > 0 && length < 25 {
-			go socket.ReceiveAckFromClients(servConn, buf, length, addr, windowSize, algo)
+			go server.ReceiveAckFromClients(servConn, buf, length, addr, windowSize, algo)
 		}
 	}
 }

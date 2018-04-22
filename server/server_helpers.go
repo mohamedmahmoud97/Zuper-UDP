@@ -1,23 +1,22 @@
-package socket
+package server
 
 import (
 	"fmt"
 	"log"
 	"net"
-	"sync"
 	"time"
 
+	"github.com/mohamedmahmoud97/Zuper-UDP/socket"
 	"github.com/vmihailenco/msgpack"
 )
 
 var (
 	prob int
-	lock = sync.RWMutex{}
 )
 
 //send a package of packets with the size of the window
 //used when start and after changing the start
-func sendWinPack(start int, window int, packets []Packet, conn *net.UDPConn, addr *net.UDPAddr, noChunks int, plp float32, quit chan uint32) {
+func sendWinPack(start int, window int, packets []socket.Packet, conn *net.UDPConn, addr *net.UDPAddr, noChunks int, plp float32, quit chan uint32, ackPack map[int]int, pckTimer map[int]time.Time) {
 	for i := start; i < start+window && i < noChunks; i++ {
 		if ackPack[i] == 0 {
 			time.Sleep(1 * time.Millisecond)
@@ -43,13 +42,13 @@ func sendWinPack(start int, window int, packets []Packet, conn *net.UDPConn, add
 
 			// set timer for each packet
 			pckTimer[i] = time.Now()
-			go timeAch(pckTimer[i], quit, uint32(i))
+			go timeAch(pckTimer[i], quit, uint32(i), ackPack)
 		}
 	}
 }
 
 //get the next start which is not sent or not acked
-func getNextStart(start int, noChunks int) int {
+func getNextStart(start int, noChunks int, ackPack map[int]int) int {
 	for start < noChunks {
 		start++
 		if ackPack[start] == 0 || ackPack[start] == 1 {
@@ -61,7 +60,7 @@ func getNextStart(start int, noChunks int) int {
 }
 
 // check if time exceeded 0.1 sec
-func timeAch(start time.Time, quit chan uint32, seqno uint32) {
+func timeAch(start time.Time, quit chan uint32, seqno uint32, ackPack map[int]int) {
 	for {
 		select {
 		case <-quit:

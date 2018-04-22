@@ -1,4 +1,4 @@
-package socket
+package server
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 	"os"
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
+	socket "github.com/mohamedmahmoud97/Zuper-UDP/socket"
 	"github.com/vmihailenco/msgpack"
 )
 
@@ -50,17 +51,17 @@ func sendToClient(conn *net.UDPConn, window int, addr *net.UDPAddr, algo, filena
 	noChunk := float64(len(dataBytes)) / float64(r)
 	noChunks := uint32(math.Ceil(noChunk))
 
-	packets := []Packet{}
+	packets := []socket.Packet{}
 
 	//make data packets and segment the file to be sent and assign seqNumber
 	for seqNum < noChunks {
 		chunk := dataBytes[previous:r]
 		noOfBytes := uint16(len(chunk))
-		piko := Packet{}
+		piko := socket.Packet{}
 		piko.Data = chunk
 		piko.Len = noOfBytes
 		piko.Seqno = seqNum
-		piko.Cksum = uint16(noChunks)
+		piko.PckNo = uint16(noChunks)
 		packets = append(packets, piko)
 		seqNum++
 		previous += size
@@ -75,7 +76,7 @@ func sendToClient(conn *net.UDPConn, window int, addr *net.UDPAddr, algo, filena
 	reliableSend(packets, noOfChunks, conn, window, addr, algo, plp)
 }
 
-func reliableSend(packets []Packet, noChunks int, conn *net.UDPConn, window int, addr *net.UDPAddr, algo string, plp float32) {
+func reliableSend(packets []socket.Packet, noChunks int, conn *net.UDPConn, window int, addr *net.UDPAddr, algo string, plp float32) {
 	switch algo {
 	case "sw":
 		SW(packets, noChunks, conn, addr, plp)
@@ -90,7 +91,7 @@ func reliableSend(packets []Packet, noChunks int, conn *net.UDPConn, window int,
 }
 
 func sendAckToClient(conn *net.UDPConn, addr *net.UDPAddr) {
-	ack := AckPacket{Seqno: 0}
+	ack := socket.AckPacket{Seqno: 0}
 
 	b, err := msgpack.Marshal(&ack)
 	if err != nil {
@@ -103,7 +104,7 @@ func sendAckToClient(conn *net.UDPConn, addr *net.UDPAddr) {
 
 //ReceiveReqFromClients any packet
 func ReceiveReqFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.UDPAddr, windowSize int, algo string, plp float32) {
-	var packet Packet
+	var packet socket.Packet
 
 	err := msgpack.Unmarshal(buf, &packet)
 	if err != nil {
@@ -122,7 +123,7 @@ func ReceiveReqFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.
 
 //ReceiveAckFromClients any packet
 func ReceiveAckFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.UDPAddr, windowSize int, algo string) {
-	var packet AckPacket
+	var packet socket.AckPacket
 
 	err := msgpack.Unmarshal(buf, &packet)
 	if err != nil {

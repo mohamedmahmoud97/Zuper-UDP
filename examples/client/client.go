@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	client "github.com/mohamedmahmoud97/Zuper-UDP/client"
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
-	socket "github.com/mohamedmahmoud97/Zuper-UDP/socket"
 )
 
 func convertToFloat(s string) float32 {
@@ -49,7 +49,7 @@ func main() {
 	errors.CheckError(err)
 
 	//create the socket between the client and the server
-	conn := socket.CreateClientSocket(localAddr, servAddr)
+	conn := client.CreateClientSocket(localAddr, servAddr)
 	defer conn.Close()
 
 	//create logfile
@@ -58,7 +58,7 @@ func main() {
 	defer flogC.Close()
 
 	//send the filename to the server
-	go socket.SendToServer(conn, initWindow, filename, plp, flogC)
+	go client.SendToServer(conn, initWindow, filename, plp, flogC)
 
 	// go read from the connection
 	for {
@@ -67,9 +67,9 @@ func main() {
 		errors.CheckError(err)
 
 		if length > 25 {
-			go socket.ReceiveFromServer(conn, buf, addr, algo)
+			go client.ReceiveFromServer(conn, buf, addr, algo)
 		} else if length > 0 && length < 25 {
-			go socket.ReceiveAckFromServer()
+			go client.ReceiveAckFromServer()
 		}
 	}
 }

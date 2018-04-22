@@ -1,4 +1,4 @@
-package socket
+package client
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"time"
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
+	socket "github.com/mohamedmahmoud97/Zuper-UDP/socket"
 	"github.com/vmihailenco/msgpack"
 )
 
@@ -48,7 +49,7 @@ func SendToServer(conn *net.UDPConn, window int, filename string, prob float32, 
 	file := []byte(filename)
 
 	noOfBytes := uint16(len(file))
-	reqPacket := Packet{Data: file, Cksum: 1, Len: noOfBytes}
+	reqPacket := socket.Packet{Data: file, PckNo: 1, Len: noOfBytes}
 
 	b, err := msgpack.Marshal(&reqPacket)
 	if err != nil {
@@ -78,8 +79,8 @@ func SendToServer(conn *net.UDPConn, window int, filename string, prob float32, 
 	}
 }
 
-func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *Packet) {
-	ack := AckPacket{Seqno: packet.Seqno}
+func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *socket.Packet) {
+	ack := socket.AckPacket{Seqno: packet.Seqno}
 
 	b, err := msgpack.Marshal(&ack)
 	if err != nil {
@@ -92,7 +93,7 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *Packet) {
 
 //ReceiveFromServer any ack packet
 func ReceiveFromServer(conn *net.UDPConn, buf []byte, addr *net.UDPAddr, algo string) {
-	var packet Packet
+	var packet socket.Packet
 
 	err := msgpack.Unmarshal(buf, &packet)
 	if err != nil {
@@ -180,9 +181,9 @@ func buildFile(algo string) {
 	os.Exit(0)
 }
 
-func checkOnPck(packet *Packet, algo string) {
+func checkOnPck(packet *socket.Packet, algo string) {
 	if packet.Seqno == 0 {
-		pckNo = packet.Cksum
+		pckNo = packet.PckNo
 	} else if int(packet.Seqno) == int(pckNo)-1 {
 		buildFile(algo)
 	}

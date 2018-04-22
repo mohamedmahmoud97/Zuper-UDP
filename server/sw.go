@@ -1,4 +1,4 @@
-package socket
+package server
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"net"
 	"time"
 
+	socket "github.com/mohamedmahmoud97/Zuper-UDP/socket"
 	"github.com/vmihailenco/msgpack"
 )
 
@@ -14,7 +15,9 @@ var (
 )
 
 //SW is the algorithm of stop-and-wait
-func SW(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, plp float32) {
+func SW(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, plp float32) {
+	var ackPack = make(map[int]int)
+
 	for i := 0; i < noChunks; i++ {
 		b, err := msgpack.Marshal(&packets[i])
 		if err != nil {
@@ -37,7 +40,7 @@ func SW(packets []Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, pl
 		quit := make(chan uint32)
 
 		//check if the time exceeded or it received the ack
-		go timeAch(start, quit, uint32(i))
+		go timeAch(start, quit, uint32(i), ackPack)
 		_, goSend := resendPck(quit)
 
 		if goSend {
