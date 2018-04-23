@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"fmt"
+	"hash/adler32"
 	"io/ioutil"
 	"log"
 	"math"
@@ -62,6 +63,7 @@ func sendToClient(conn *net.UDPConn, window int, addr *net.UDPAddr, algo, filena
 		piko.Len = noOfBytes
 		piko.Seqno = seqNum
 		piko.PckNo = uint16(noChunks)
+		piko.Cksum = adler32.Checksum(chunk)
 		packets = append(packets, piko)
 		seqNum++
 		previous += size

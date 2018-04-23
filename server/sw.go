@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	probcount int
+	probcountL int
+	probcountC = 5
 )
 
 //SW is the algorithm of stop-and-wait
@@ -25,7 +26,7 @@ func SW(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPA
 		}
 
 		//drop packets with probability plp
-		if probcount%int(plp*100) != 0 {
+		if probcountL%int(plp*100) != 0 && probcountC%int(plp*100) != 0 {
 			_, err = conn.WriteToUDP(b, addr)
 			log.SetOutput(flogS)
 			log.Printf("Sent packet %v ... \n", i)
@@ -50,6 +51,7 @@ func SW(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPA
 		}
 
 		//increment probcount
-		probcount++
+		probcountL++
+		probcountC++
 	}
 }

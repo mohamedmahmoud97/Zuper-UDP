@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	prob int
+	probLoss   int
+	probCorupt = 5
 )
 
 //send a package of packets with the size of the window
@@ -26,7 +27,7 @@ func sendWinPack(start int, window int, packets []socket.Packet, conn *net.UDPCo
 			}
 
 			//drop packets with probability plp
-			if prob%int(plp*100) != 0 {
+			if probLoss%int(plp*100) != 0 && probCorupt%int(plp*100) != 0 {
 				_, err = conn.WriteToUDP(b, addr)
 				ackPack[i] = 1
 				// time.Sleep(1 * time.Millisecond)
@@ -35,10 +36,11 @@ func sendWinPack(start int, window int, packets []socket.Packet, conn *net.UDPCo
 				fmt.Printf("Sent packet %v ... \n", i)
 			} else {
 				log.SetOutput(flogS)
-				log.Printf("Sent packet %v but dropped ... \n", i)
-				fmt.Printf("Sent packet %v but dropped ... \n", i)
+				log.Printf("Sent packet %v but dropped or corrupted ... \n", i)
+				fmt.Printf("Sent packet %v but dropped or corrupted ... \n", i)
 			}
-			prob++
+			probLoss++
+			probCorupt++
 
 			// set timer for each packet
 			pckTimer[i] = time.Now()

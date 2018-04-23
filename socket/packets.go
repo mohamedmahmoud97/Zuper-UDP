@@ -7,16 +7,13 @@ type Packet struct {
 	PckNo, Len uint16
 	//Data
 	Data []byte
+	//Cksum
+	Cksum uint32
 }
 
 //AckPacket is the acknoledgment packet
 type AckPacket struct {
 	//Header
 	Seqno uint32
-	Cksum uint16
-}
-
-//CheckSum of the packet
-func (p *Packet) CheckSum() {
-
+	Cksum uint32
 }

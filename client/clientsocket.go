@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"hash/adler32"
 	"io/ioutil"
 	"log"
 	"net"
@@ -104,28 +105,30 @@ func ReceiveFromServer(conn *net.UDPConn, buf []byte, addr *net.UDPAddr, algo st
 	log.Printf("Delivered packet with seqno %v \n", packet.Seqno)
 	fmt.Printf("Delivered packet with seqno %v \n", packet.Seqno)
 
-	if algo == "sw" {
-		go sendResponse(conn, addr, &packet)
-		appendFile(packet.Data, packet.Seqno)
-		checkOnPck(&packet, algo)
-	} else if algo == "gbn" {
-		if int32(packet.Seqno) == lastAck+1 {
-			lastAck = int32(packet.Seqno)
-			fmt.Printf("last ack packet is %v\n", lastAck)
+	if packet.Cksum == adler32.Checksum(packet.Data) {
+		if algo == "sw" {
+			go sendResponse(conn, addr, &packet)
+			appendFile(packet.Data, packet.Seqno)
+			checkOnPck(&packet, algo)
+		} else if algo == "gbn" {
+			if int32(packet.Seqno) == lastAck+1 {
+				lastAck = int32(packet.Seqno)
+				fmt.Printf("last ack packet is %v\n", lastAck)
+				appendFile(packet.Data, packet.Seqno)
+				go sendResponse(conn, addr, &packet)
+				checkOnPck(&packet, algo)
+			} else if int32(packet.Seqno) > lastAck+1 && lastAck != -1 {
+				//change seqno of ack packet to last delivered packet
+				packet.Seqno = uint32(lastAck)
+				go sendResponse(conn, addr, &packet)
+			} else if int32(packet.Seqno) > lastAck+1 && lastAck == -1 {
+
+			}
+		} else if algo == "sr" {
 			appendFile(packet.Data, packet.Seqno)
 			go sendResponse(conn, addr, &packet)
 			checkOnPck(&packet, algo)
-		} else if int32(packet.Seqno) > lastAck+1 && lastAck != -1 {
-			//change seqno of ack packet to last delivered packet
-			packet.Seqno = uint32(lastAck)
-			go sendResponse(conn, addr, &packet)
-		} else if int32(packet.Seqno) > lastAck+1 && lastAck == -1 {
-
 		}
-	} else if algo == "sr" {
-		appendFile(packet.Data, packet.Seqno)
-		go sendResponse(conn, addr, &packet)
-		checkOnPck(&packet, algo)
 	}
 }
 
