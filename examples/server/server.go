@@ -26,7 +26,7 @@ const (
 
  A client-side udp reliable data transfer protocol
 
-
+ #####################################################################
 
 `
 )
@@ -41,6 +41,8 @@ type ServerInfo struct {
 
 var (
 	p, seedValue float32
+	//
+	lastPort string
 )
 
 func convertToFloat(s string) float32 {
@@ -53,6 +55,21 @@ func convertToInt(s string) int16 {
 	value, err := strconv.ParseInt(s, 10, 16)
 	errors.CheckError(err)
 	return int16(value)
+}
+
+func getNextSocketAddr(windowSize int) *net.UDPAddr {
+	//joining the IP address to the port
+	var addr bytes.Buffer
+	addr.WriteString(":")
+	lastPortInt, _ := strconv.Atoi(lastPort)
+	lastPort = strconv.Itoa(lastPortInt + 1)
+	addr.WriteString(lastPort)
+
+	serverInfo := ServerInfo{addr.String(), windowSize}
+	socketAddr, err := net.ResolveUDPAddr("udp", serverInfo.PortNumber)
+	errors.CheckError(err)
+
+	return socketAddr
 }
 
 func main() {
@@ -84,30 +101,37 @@ func main() {
 
 	serverInfo := ServerInfo{address.String(), windowSize}
 	servAddr, err := net.ResolveUDPAddr("udp", serverInfo.PortNumber)
-	fmt.Printf("connection in server on port %v", servAddr)
+	fmt.Printf("started connection in server on port %v ... \n", servAddr)
 	errors.CheckError(err)
 
 	//create logfile
-	flogC, err := os.OpenFile("serverlog", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	flogS, err := os.OpenFile("serverlog", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	errors.CheckError(err)
-	defer flogC.Close()
+	defer flogS.Close()
 
 	//create the socket in server-side
-	servConn := server.CreateSerSocket(servAddr, flogC)
+	mainConn := server.CreateSerSocket(servAddr, flogS)
 
-	defer servConn.Close()
+	defer mainConn.Close()
+
+	lastPort = port
 
 	// go read from the connection
 	for {
 		buf := make([]byte, 600)
-		length, addr, err := servConn.ReadFromUDP(buf[0:])
+		length, addr, err := mainConn.ReadFromUDP(buf[0:])
 		errors.CheckError(err)
 
-		if length > 40 {
-			fmt.Print("receiving data packet from clients ... \n")
-			go server.ReceiveReqFromClients(servConn, buf, length, addr, windowSize, algo, p)
-		} else if length > 0 && length < 40 {
-			go server.ReceiveAckFromClients(servConn, buf, length, addr, windowSize, algo)
+		if length > 0 {
+			socketAddr := getNextSocketAddr(windowSize)
+			server.SendAckToClient(mainConn, addr, socketAddr)
+			go server.ListenOnSocket(windowSize, algo, p, socketAddr, addr, buf, length)
 		}
+		// if length > 40 {
+		// 	fmt.Print("receiving data packet from clients ... \n")
+		// 	go server.ReceiveReqFromClients(servConn, buf, length, addr, windowSize, algo, p)
+		// } else if length > 0 && length < 40 {
+		// 	go server.ReceiveAckFromClients(servConn, buf, length, addr, windowSize, algo)
+		// }
 	}
 }

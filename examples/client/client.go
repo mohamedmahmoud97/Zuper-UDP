@@ -9,9 +9,12 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	client "github.com/mohamedmahmoud97/Zuper-UDP/client"
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
+	"github.com/mohamedmahmoud97/Zuper-UDP/socket"
+	"github.com/vmihailenco/msgpack"
 )
 
 const (
@@ -26,7 +29,7 @@ const (
 
  A client-side udp reliable data transfer protocol
 
-
+#####################################################################
 
 `
 )
@@ -77,7 +80,7 @@ func main() {
 
 	//create the socket between the client and the server
 	conn := client.CreateClientSocket(localAddr, servAddr)
-	defer conn.Close()
+	// defer conn.Close()
 
 	//create logfile
 	flogC, err := os.OpenFile("clientlog", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -87,15 +90,40 @@ func main() {
 	//send the filename to the server
 	go client.SendToServer(conn, initWindow, filename, plp, flogC)
 
+	var mainConn *net.UDPConn
+
+	buf := make([]byte, 600)
+	length, _, err := conn.ReadFromUDP(buf[0:])
+	errors.CheckError(err)
+
+	if length > 0 && length < 40 {
+		var packet socket.AckPacket
+
+		err := msgpack.Unmarshal(buf, &packet)
+		if err != nil {
+			panic(err)
+		}
+
+		go client.ReceiveAckFromServer()
+
+		time.Sleep(time.Millisecond)
+		conn.Close()
+
+		mainConn, err = net.ListenUDP("udp", localAddr)
+		errors.CheckError(err)
+	}
+
+	defer mainConn.Close()
+
 	// go read from the connection
 	for {
 		buf := make([]byte, 600)
-		length, addr, err := conn.ReadFromUDP(buf[0:])
+		length, addr, err := mainConn.ReadFromUDP(buf[0:])
 		errors.CheckError(err)
 
-		if length > 25 {
-			go client.ReceiveFromServer(conn, buf, addr, algo)
-		} else if length > 0 && length < 25 {
+		if length > 40 {
+			go client.ReceiveFromServer(mainConn, buf, addr, algo)
+		} else if length > 0 && length < 40 {
 			go client.ReceiveAckFromServer()
 		}
 	}

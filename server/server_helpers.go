@@ -69,7 +69,7 @@ func timeAch(start time.Time, quit chan uint32, seqno uint32, ackPack map[int]in
 			return
 		default:
 			elapsed := time.Since(start)
-			if elapsed > 100000000 {
+			if elapsed > 200000000 {
 				// time.Sleep(1 * time.Millisecond)
 				if ackPack[int(seqno)] != 2 {
 					log.SetOutput(flogS)
@@ -84,7 +84,7 @@ func timeAch(start time.Time, quit chan uint32, seqno uint32, ackPack map[int]in
 }
 
 // check if we have to resend the packet or not
-func resendPck(quit chan uint32) (uint32, bool) {
+func resendPck(quit chan uint32, AckCheck chan uint32) (uint32, bool) {
 	select {
 	case ackseqno := <-AckCheck:
 		return ackseqno, false

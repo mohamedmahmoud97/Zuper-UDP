@@ -8,7 +8,7 @@ import (
 )
 
 //SR is the algorithm of selective-repeat
-func SR(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, window int, plp float32) {
+func SR(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, window int, plp float32, AckCheck chan uint32) {
 	var ackPack = make(map[int]int)
 	var pckTimer = make(map[int]time.Time)
 	start := 0
@@ -25,7 +25,7 @@ func SR(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPA
 	//loop until all the packets are sent and received their ack
 	for (start) < noChunks {
 		// check if time exceeded or we received a new ack packet
-		pcktseqno, goResend := resendPck(quit)
+		pcktseqno, goResend := resendPck(quit, AckCheck)
 		ackpckt := int(pcktseqno)
 
 		if !goResend {
@@ -47,9 +47,11 @@ func SR(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPA
 
 			}
 		} else {
-			ackPack[ackpckt] = 0
-			time.Sleep(1 * time.Millisecond)
-			sendWinPack(start, 1, packets, conn, addr, noChunks, plp, quit, ackPack, pckTimer)
+			if ackPack[ackpckt] != 2 {
+				ackPack[ackpckt] = 0
+				// time.Sleep(1 * time.Millisecond)
+				sendWinPack(start, 1, packets, conn, addr, noChunks, plp, quit, ackPack, pckTimer)
+			}
 		}
 	}
 	start = 0

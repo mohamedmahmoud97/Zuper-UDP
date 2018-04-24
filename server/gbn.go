@@ -8,7 +8,7 @@ import (
 )
 
 //GBN is the go-back-n algorithm
-func GBN(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, window int, plp float32) {
+func GBN(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, window int, plp float32, AckCheck chan uint32) {
 	// a map to give a value for all packets
 	// 0 = unsent, 1 = sent, 2 = sent and rcved ack
 	var ackPack = make(map[int]int)
@@ -27,26 +27,26 @@ func GBN(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDP
 	//loop until all the packets are sent and received their ack
 	for (start) < noChunks {
 		// check if time exceeded or we received a new ack packet
-		pcktseqno, goResend := resendPck(quit)
+		pcktseqno, goResend := resendPck(quit, AckCheck)
 		ackpckt := int(pcktseqno)
 
 		if !goResend {
 			if ackpckt == start {
 				ackPack[ackpckt] = 2
-				time.Sleep(1 * time.Millisecond)
+				// time.Sleep(1 * time.Millisecond)
 				start = getNextStart(start, noChunks, ackPack)
 				if start != -1 {
 					sendWinPack(start, window, packets, conn, addr, noChunks, plp, quit, ackPack, pckTimer)
 				}
 			} else if ackPack[ackpckt] == 1 {
 				ackPack[ackpckt] = 2
-				time.Sleep(1 * time.Millisecond)
+				// time.Sleep(1 * time.Millisecond)
 				nextUnSent := getNextStart(ackpckt, noChunks, ackPack)
 				if nextUnSent < start+window && nextUnSent != -1 {
 					sendWinPack(start, 1, packets, conn, addr, noChunks, plp, quit, ackPack, pckTimer)
 				}
 			} else if ackPack[ackpckt] == 2 {
-				time.Sleep(1 * time.Millisecond)
+				// time.Sleep(1 * time.Millisecond)
 			}
 		} else {
 			reset(start, ackpckt, window, quit, ackPack)

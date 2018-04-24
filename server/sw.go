@@ -16,7 +16,7 @@ var (
 )
 
 //SW is the algorithm of stop-and-wait
-func SW(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, plp float32) {
+func SW(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPAddr, plp float32, AckCheck chan uint32) {
 	var ackPack = make(map[int]int)
 
 	for i := 0; i < noChunks; i++ {
@@ -42,7 +42,7 @@ func SW(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPA
 
 		//check if the time exceeded or it received the ack
 		go timeAch(start, quit, uint32(i), ackPack)
-		_, goSend := resendPck(quit)
+		_, goSend := resendPck(quit, AckCheck)
 
 		if goSend {
 			i = i - 1
@@ -54,4 +54,7 @@ func SW(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPA
 		probcountL++
 		probcountC++
 	}
+	// log.Printf("Closed connection of port %v... ", conn)
+	// fmt.Printf("Closed connection of port %v... ", conn)
+	// conn.Close()
 }

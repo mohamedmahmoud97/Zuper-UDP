@@ -66,6 +66,8 @@ func SendToServer(conn *net.UDPConn, window int, filename string, prob float32, 
 	_, err = conn.Write(b)
 	errors.CheckError(err)
 
+	// conn.Close()
+
 	start := time.Now()
 	quit := make(chan uint32)
 
@@ -88,7 +90,7 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *socket.Packet) {
 		panic(err)
 	}
 
-	_, err = conn.Write(b)
+	_, err = conn.WriteToUDP(b, addr)
 	errors.CheckError(err)
 }
 
