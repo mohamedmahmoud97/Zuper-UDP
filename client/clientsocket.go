@@ -30,14 +30,14 @@ var (
 )
 
 //CreateClientSocket in client-side
-func CreateClientSocket(localAddr, servAddr *net.UDPAddr) *net.UDPConn {
-	conn, err := net.DialUDP("udp", localAddr, servAddr)
+func CreateClientSocket(localAddr *net.UDPAddr) *net.UDPConn {
+	conn, err := net.ListenUDP("udp", localAddr)
 	errors.CheckError(err)
 	return conn
 }
 
 //SendToServer the filename of the needed file
-func SendToServer(conn *net.UDPConn, window int, filename string, prob float32, flogc *os.File) {
+func SendToServer(conn *net.UDPConn, servAddr *net.UDPAddr, window int, filename string, prob float32, flogc *os.File) {
 	plp = prob
 
 	flogC = flogc
@@ -63,7 +63,7 @@ func SendToServer(conn *net.UDPConn, window int, filename string, prob float32, 
 	fmt.Println("Encoded the message ...")
 
 	//send the message to the server
-	_, err = conn.Write(b)
+	_, err = conn.WriteToUDP(b, servAddr)
 	errors.CheckError(err)
 
 	// conn.Close()
@@ -76,7 +76,7 @@ func SendToServer(conn *net.UDPConn, window int, filename string, prob float32, 
 	goSend := resendReq(quit)
 
 	if goSend {
-		SendToServer(conn, window, filename, prob, flogC)
+		SendToServer(conn, servAddr, window, filename, prob, flogC)
 	} else if !goSend {
 		quit <- 0
 	}

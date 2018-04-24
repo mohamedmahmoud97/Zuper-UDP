@@ -49,7 +49,6 @@ func SR(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPA
 		} else {
 			if ackPack[ackpckt] != 2 {
 				ackPack[ackpckt] = 0
-				// time.Sleep(1 * time.Millisecond)
 				sendWinPack(start, 1, packets, conn, addr, noChunks, plp, quit, ackPack, pckTimer)
 			}
 		}

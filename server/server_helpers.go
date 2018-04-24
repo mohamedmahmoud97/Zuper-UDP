@@ -30,7 +30,7 @@ func sendWinPack(start int, window int, packets []socket.Packet, conn *net.UDPCo
 			if probLoss%int(plp*100) != 0 && probCorupt%int(plp*100) != 0 {
 				_, err = conn.WriteToUDP(b, addr)
 				ackPack[i] = 1
-				// time.Sleep(1 * time.Millisecond)
+
 				log.SetOutput(flogS)
 				log.Printf("Sent packet %v ... \n", i)
 				fmt.Printf("Sent packet %v ... \n", i)
@@ -70,7 +70,6 @@ func timeAch(start time.Time, quit chan uint32, seqno uint32, ackPack map[int]in
 		default:
 			elapsed := time.Since(start)
 			if elapsed > 200000000 {
-				// time.Sleep(1 * time.Millisecond)
 				if ackPack[int(seqno)] != 2 {
 					log.SetOutput(flogS)
 					log.Printf("time exceeded for pckt %v\n", seqno)
