@@ -6,6 +6,7 @@ import (
 	"net"
 	"time"
 
+	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
 	"github.com/mohamedmahmoud97/Zuper-UDP/socket"
 	"github.com/vmihailenco/msgpack"
 )
@@ -29,6 +30,7 @@ func sendWinPack(start int, window int, packets []socket.Packet, conn *net.UDPCo
 			//drop packets with probability plp
 			if probLoss%int(plp*100) != 0 && probCorupt%int(plp*100) != 0 {
 				_, err = conn.WriteToUDP(b, addr)
+				errors.CheckError(err)
 				ackPack[i] = 1
 
 				log.SetOutput(flogS)
