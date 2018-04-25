@@ -6,12 +6,13 @@ language: go
 os:
   - linux
 
-sudo: false
+sudo: required
 
 install:
   - go get -t github.com/mohamedmahmoud97/Zuper-UDP
   - go get -t github.com/vmihailenco/msgpack
 
 script:
-  - go run examples/server/server.go
-  - go run examples/client/client.go
+  - bash gbn.sh
+  - bash sr.sh
+  - bash sw.sh
