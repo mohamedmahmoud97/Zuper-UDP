@@ -13,11 +13,8 @@ install:
   - go get -t github.com/vmihailenco/msgpack
 
 script:
-  - go vet ./...
-  - go build -v ./...
-  - go install -v
-  - examples/server/server
-  - examples/client/client
+  - go run examples/server/server.go
+  - go run examples/client/client.go
 
 before_install:
   - cp .netrc ~
