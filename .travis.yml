@@ -15,7 +15,3 @@ install:
 script:
   - go run examples/server/server.go
   - go run examples/client/client.go
-
-before_install:
-  - cp .netrc ~
-  - chmod 600 .netrc
