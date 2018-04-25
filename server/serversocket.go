@@ -31,7 +31,7 @@ func CreateSerSocket(servAddr *net.UDPAddr, flog *os.File) *net.UDPConn {
 
 func encodeFile(fileName string) []byte {
 	var file bytes.Buffer
-	file.WriteString("/home/mohamedmahmoud/Workspaces/Zuper-UDP/")
+	file.WriteString("./")
 	file.WriteString(fileName)
 	dat, err := ioutil.ReadFile(file.String())
 	errors.CheckError(err)
