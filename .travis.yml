@@ -16,9 +16,8 @@ script:
   - go vet ./...
   - go build -v ./...
   - go install -v
-  - ./gbn.sh
-  - ./sr.sh
-  - ./sw.sh
+  - examples/server/server
+  - examples/client/client
 
 before_install:
   - cp .netrc ~
