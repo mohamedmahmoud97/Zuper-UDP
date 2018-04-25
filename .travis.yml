@@ -5,14 +5,3 @@ language: go
 
 os:
   - linux
-
-sudo: required
-
-install:
-  - go get -t github.com/mohamedmahmoud97/Zuper-UDP
-  - go get -t github.com/vmihailenco/msgpack
-
-script:
-  - bash gbn.sh
-  - bash sr.sh
-  - bash sw.sh
