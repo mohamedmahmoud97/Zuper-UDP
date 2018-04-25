@@ -42,9 +42,9 @@ func SendToServer(conn *net.UDPConn, servAddr *net.UDPAddr, window int, filename
 
 	flogC = flogc
 	log.SetOutput(flogC)
-	log.Printf("The client is requesting file %v from server ... \n", filename)
+	log.Printf("client is requesting file %v from server ... \n", filename)
 
-	fmt.Printf("the client is requesting file %v from server ... \n", filename)
+	fmt.Printf("client is requesting file %v from server ... \n", filename)
 	fileName = filename
 
 	file := []byte(filename)
