@@ -6,7 +6,7 @@ https://camo.githubusercontent.com/915b7be44ada53c290eb157634330494ebe3e30a/6874
 )](https://godoc.org/github.com/mohamedmahmoud97/Zuper-UDP)
 [![License](https://img.shields.io/dub/l/vibe-d.svg)](https://github.com/mohamedmahmoud97/Zuper-UDP/blob/v2/LICENSE)
 
- A library for reliable data transfer service on top of the UDP protocol.
+ A library for reliable data transfer service on top of the UDP protocol that also simulate packet loss and packet corruption and handles these issues for reliability.
 
 ## Installation
 You can use `go get` to install to your `$GOPATH`, assuming that you have a github.com parent folder already created under `src`:
@@ -35,7 +35,7 @@ started connection in server on port :10066 ...
 
 ## Test it 
 
-You can test the library with running any of the bash files: `gbn.sh` for testing GoBackN algorithm, `sr.sh` for SelectiveRepeat, and `sw.sh` for Stop-and-Wait. You can also change the parameters for the client and the server in `device_info/client.in` and `device_info/server.in`
+You can test the library with running any of the bash files: `gbn.sh` for testing GoBackN algorithm, `sr.sh` for SelectiveRepeat, and `sw.sh` for Stop-and-Wait. You can also change the parameters for the client and the server in `device_info/client.in` and `device_info/server.in`. If you want to neglect the simulation probability packet loss just change last attribute in `server.in` to 0.
 
 #### **For Client**
 ```
@@ -62,6 +62,6 @@ test.pdf             Filename to be transferred.
 [![asciicast](https://asciinema.org/a/U9RGjOWl1sKWf3qkxEVMyE5AI.png)](https://asciinema.org/a/U9RGjOWl1sKWf3qkxEVMyE5AI)
 
 ## Contributing
-You can feel free to contribute to this project. Either for adding features, found a bug, etc.
+You can feel free to contribute to this project. Either for adding features, found a bug, .. etc.
 
 
