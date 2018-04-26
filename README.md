@@ -7,9 +7,15 @@ https://camo.githubusercontent.com/915b7be44ada53c290eb157634330494ebe3e30a/6874
 [![License](https://img.shields.io/dub/l/vibe-d.svg)](https://github.com/mohamedmahmoud97/Zuper-UDP/blob/v2/LICENSE)
  A library for reliable data transfer service on top of the UDP protocol.
 
-### Test it 
+## Installation
+You can use `go get` to install to your `$GOPATH`, assuming that you have a github.com parent folder already created under `src`:
+```
+$ go get -t github.com/mohamedmahmoud97/Zuper-UDP
+```
 
-You can test the library with running any of the bash files `gbn.sh` for testing GoBackN algorithm, `sr.sh` for SelectiveRepeat, and `sw.sh` for Stop-and-Wait. You can also change the parameters for the client and the server in `device_info/client.in` and `device_info/server.in`
+## Test it 
+
+You can test the library with running any of the bash files: `gbn.sh` for testing GoBackN algorithm, `sr.sh` for SelectiveRepeat, and `sw.sh` for Stop-and-Wait. You can also change the parameters for the client and the server in `device_info/client.in` and `device_info/server.in`
 
 #### **For Client**
 ```
@@ -29,5 +35,13 @@ test.pdf             Filename to be transferred.
 0.3                  Probability p of datagram loss (real number in the range [ 0.0 , 1.0 ]).
 ```
 
-#### Create a server
-Setup event handlers for the server then start it providing the `IP` and `Port`
+#### **test run of server**
+[![asciicast](https://asciinema.org/a/hhFUazjAEaj692cKswuYeQrGY.png)](https://asciinema.org/a/hhFUazjAEaj692cKswuYeQrGY)
+
+#### **test run of client**
+[![asciicast](https://asciinema.org/a/HovaHJDrJPdZViyg8Cze4MM8j.png)](https://asciinema.org/a/HovaHJDrJPdZViyg8Cze4MM8j)
+
+## Contributing
+You can feel free to contribute to this project. Either for adding features, found a bug, etc.
+
+
