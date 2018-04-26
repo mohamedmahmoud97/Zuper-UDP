@@ -24,7 +24,7 @@ const (
  /_ _ _|_ _ _| .__/ \_ _ |_|   |_ __ _|___/ |_|    v1.0  SERVER
              |_|
 
- A client-side udp reliable data transfer protocol
+ A server-side udp reliable data transfer protocol
 
  #####################################################################
 

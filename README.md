@@ -5,12 +5,32 @@
 https://camo.githubusercontent.com/915b7be44ada53c290eb157634330494ebe3e30a/68747470733a2f2f676f646f632e6f72672f6769746875622e636f6d2f676f6c616e672f6764646f3f7374617475732e737667
 )](https://godoc.org/github.com/mohamedmahmoud97/Zuper-UDP)
 [![License](https://img.shields.io/dub/l/vibe-d.svg)](https://github.com/mohamedmahmoud97/Zuper-UDP/blob/v2/LICENSE)
+
  A library for reliable data transfer service on top of the UDP protocol.
 
 ## Installation
 You can use `go get` to install to your `$GOPATH`, assuming that you have a github.com parent folder already created under `src`:
 ```
 $ go get -t github.com/mohamedmahmoud97/Zuper-UDP
+```
+
+## Usage
+```
+$ go run examples/server/server.go sw
+ 
+ _ _ _                          _    _ ___   _ __
+|_ _  | _   _ _ __   ___  _ __ | |  | |._ \ | ._ \
+   /  /| | | | ._ \ / _ \| '__|| |  | || \ || |_) |
+  /  /_| |_| | |_) | |_)/| |   | |__| ||_/ || .__/
+ /_ _ _|_ _ _| .__/ \_ _ |_|   |_ __ _|___/ |_|    v1.0  SERVER
+             |_|
+
+ A server-side udp reliable data transfer protocol
+
+ #####################################################################
+
+started connection in server on port :10066 ... 
+
 ```
 
 ## Test it 
@@ -36,10 +56,10 @@ test.pdf             Filename to be transferred.
 ```
 
 #### **test run of server**
-[![asciicast](https://asciinema.org/a/hhFUazjAEaj692cKswuYeQrGY.png)](https://asciinema.org/a/hhFUazjAEaj692cKswuYeQrGY)
+[![asciicast](https://asciinema.org/a/GSjxa39RyY1SgRVkHj7wCntSf.png)](https://asciinema.org/a/GSjxa39RyY1SgRVkHj7wCntSf)
 
 #### **test run of client**
-[![asciicast](https://asciinema.org/a/HovaHJDrJPdZViyg8Cze4MM8j.png)](https://asciinema.org/a/HovaHJDrJPdZViyg8Cze4MM8j)
+[![asciicast](https://asciinema.org/a/U9RGjOWl1sKWf3qkxEVMyE5AI.png)](https://asciinema.org/a/U9RGjOWl1sKWf3qkxEVMyE5AI)
 
 ## Contributing
 You can feel free to contribute to this project. Either for adding features, found a bug, etc.
