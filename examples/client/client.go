@@ -53,10 +53,9 @@ func main() {
 	dat, err := ioutil.ReadFile("./device_info/client.in")
 	errors.CheckError(err)
 	s := strings.Split(string(dat), "\n")
-	servIP, servPort, clientIP, clientPort, filename, window, prob := s[0], s[1], s[2], s[3], s[4], s[5], s[6]
+	servIP, servPort, clientIP, clientPort, filename, window := s[0], s[1], s[2], s[3], s[4], s[5]
 
 	initWindow, err := strconv.Atoi(window)
-	plp := convertToFloat(prob)
 
 	//joining the IP address to the port
 	var sAddress bytes.Buffer
@@ -85,7 +84,7 @@ func main() {
 	defer flogC.Close()
 
 	//send the filename to the server
-	go client.SendToServer(mainConn, servAddr, initWindow, filename, plp, flogC)
+	go client.SendToServer(mainConn, servAddr, initWindow, filename, flogC)
 
 	// go read from the connection
 	for {

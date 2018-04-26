@@ -54,7 +54,4 @@ func SW(packets []socket.Packet, noChunks int, conn *net.UDPConn, addr *net.UDPA
 		probcountL++
 		probcountC++
 	}
-	// log.Printf("Closed connection of port %v... ", conn)
-	// fmt.Printf("Closed connection of port %v... ", conn)
-	// conn.Close()
 }

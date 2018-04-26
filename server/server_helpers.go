@@ -63,7 +63,7 @@ func getNextStart(start int, noChunks int, ackPack map[int]int) int {
 	return -1
 }
 
-// check if time exceeded 0.1 sec
+// check if time exceeded 0.2 sec
 func timeAch(start time.Time, quit chan uint32, seqno uint32, ackPack map[int]int) {
 	for {
 		select {

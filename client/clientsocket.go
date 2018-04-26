@@ -37,9 +37,7 @@ func CreateClientSocket(localAddr *net.UDPAddr) *net.UDPConn {
 }
 
 //SendToServer the filename of the needed file
-func SendToServer(conn *net.UDPConn, servAddr *net.UDPAddr, window int, filename string, prob float32, flogc *os.File) {
-	plp = prob
-
+func SendToServer(conn *net.UDPConn, servAddr *net.UDPAddr, window int, filename string, flogc *os.File) {
 	flogC = flogc
 	log.SetOutput(flogC)
 	log.Printf("client is requesting file %v from server ... \n", filename)
@@ -76,7 +74,7 @@ func SendToServer(conn *net.UDPConn, servAddr *net.UDPAddr, window int, filename
 	goSend := resendReq(quit)
 
 	if goSend {
-		SendToServer(conn, servAddr, window, filename, prob, flogC)
+		SendToServer(conn, servAddr, window, filename, flogC)
 	} else if !goSend {
 		quit <- 0
 	}
