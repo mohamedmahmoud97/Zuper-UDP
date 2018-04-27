@@ -144,7 +144,7 @@ func ListenOnSocket(windowSize int, algo string, p float32, socketAddr *net.UDPA
 		length, addr, err := servConn.ReadFromUDP(buf[0:])
 		errors.CheckError(err)
 
-		if length > 100 {
+		if length > 115 {
 			fmt.Print("receiving data packet from client ... \n")
 			var packet socket.Packet
 
@@ -152,7 +152,7 @@ func ListenOnSocket(windowSize int, algo string, p float32, socketAddr *net.UDPA
 			errors.CheckError(err)
 
 			go ReceiveReqFromClients(servConn, &packet, addr, socketAddr, windowSize, algo, p, AckCheck)
-		} else if length > 0 && length < 100 {
+		} else if length > 0 && length < 115 {
 			var packet socket.AckPacket
 
 			err := msgpack.Unmarshal(buf, &packet)

@@ -40,26 +40,31 @@ func main() {
 	flag.Parse()
 	flag.Usage()
 
-	//Reading Server info from file
+	//Reading Loadbalancer info from file
 	dat, err := ioutil.ReadFile("./device_info/loadbalancer.in")
 	errors.CheckError(err)
 	servers := strings.Split(string(dat), "\n")
 
 	mainAddr, err := net.ResolveUDPAddr("udp", servers[0])
 	errors.CheckError(err)
-	mainConn := loadbalance.CreateMainSocket(mainAddr)
+
+	//create logfile
+	flogL, err := os.OpenFile("loadbalancerlog", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	errors.CheckError(err)
+	defer flogL.Close()
+
+	//create main socket
+	mainConn := loadbalance.CreateMainSocket(mainAddr, flogL)
 
 	//make the UDP addresses for all servers
-	serversAddr := loadbalance.CreateServersAddr(servers[1:])
-
-	serversConn := loadbalance.CreateSockets(serversAddr)
+	serversAddr := loadbalance.CreateServersAddr(servers)
 
 	for {
-		buf := make([]byte, 600)
+		buf := make([]byte, 700)
 		length, addr, err := mainConn.ReadFromUDP(buf[0:])
 		errors.CheckError(err)
 
-		if length > 40 {
+		if length > 115 {
 			var packet socket.Packet
 
 			err := msgpack.Unmarshal(buf, &packet)
@@ -71,9 +76,9 @@ func main() {
 			} else {
 				//choose the best server to be assigned to this client request
 				bestServer := loadbalance.ChooseServer(serversAddr)
-				go loadbalance.AssignToServer(serversConn[bestServer], bestServer, &packet)
+				go loadbalance.AssignToServer(mainConn, bestServer, &packet)
 			}
-		} else if length > 0 && length < 40 {
+		} else if length > 0 && length < 115 {
 			var packet socket.AckPacket
 
 			err := msgpack.Unmarshal(buf, &packet)
@@ -81,10 +86,10 @@ func main() {
 
 			if loadbalance.IsServer(addr, serversAddr) == true {
 				//send ack to client upon its request
-				go loadbalance.SendAckToClient(mainConn, &packet)
+				go loadbalance.SendAckToClient(mainConn, addr, &packet)
 			} else {
 				//send the ack to the server
-				go loadbalance.SendAckToServer(serversConn, &packet)
+				go loadbalance.SendAckToServer(mainConn, &packet)
 			}
 		}
 	}

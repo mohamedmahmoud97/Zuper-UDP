@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 
 	"github.com/mohamedmahmoud97/Zuper-UDP/errors"
 	"github.com/mohamedmahmoud97/Zuper-UDP/socket"
@@ -17,7 +18,9 @@ var (
 )
 
 //CreateMainSocket for loadbalancer to listen on this port
-func CreateMainSocket(addr *net.UDPAddr) *net.UDPConn {
+func CreateMainSocket(addr *net.UDPAddr, log *os.File) *net.UDPConn {
+	flogL = log
+
 	//create the socket on the port number
 	servConn, err := net.ListenUDP("udp", addr)
 	errors.CheckError(err)
@@ -26,11 +29,11 @@ func CreateMainSocket(addr *net.UDPAddr) *net.UDPConn {
 
 //CreateServersAddr is creating UDP addresses for all servers
 func CreateServersAddr(servers []string) []*net.UDPAddr {
-	serversAddr := make([]*net.UDPAddr, len(servers))
-	for i := 0; i < len(servers); i++ {
-		servAddr, err := net.ResolveUDPAddr("udp", servers[i])
+	serversAddr := make([]*net.UDPAddr, len(servers)-1)
+	for i, addr := range servers[1:] {
+		servAddr, err := net.ResolveUDPAddr("udp", addr)
 		errors.CheckError(err)
-		serversAddr = append(serversAddr, servAddr)
+		serversAddr[i] = servAddr
 	}
 	return serversAddr
 }
@@ -57,8 +60,15 @@ func ChooseServer(serversAddr []*net.UDPAddr) *net.UDPAddr {
 
 //IsServer is to check if the incoming packet is from a server or not
 func IsServer(addr *net.UDPAddr, servers []*net.UDPAddr) bool {
+	str := addr.String()
+	strs := strings.Split(str, ":")
+	ip := strs[0]
+
 	for i := 0; i < len(servers); i++ {
-		if addr == servers[i] {
+		strS := servers[i].String()
+		strsS := strings.Split(strS, ":")
+		ipS := strsS[0]
+		if ip == ipS {
 			return true
 		}
 	}
@@ -66,7 +76,7 @@ func IsServer(addr *net.UDPAddr, servers []*net.UDPAddr) bool {
 }
 
 //AssignToServer a request from client
-func AssignToServer(conn *net.UDPConn, server *net.UDPAddr, packet *socket.Packet) {
+func AssignToServer(mainConn *net.UDPConn, server *net.UDPAddr, packet *socket.Packet) {
 	pck := socket.Packet{Data: packet.Data, PckNo: packet.PckNo, Len: packet.Len, SrcAddr: packet.SrcAddr, DstAddr: server}
 	b, err := msgpack.Marshal(&pck)
 	if err != nil {
@@ -74,12 +84,11 @@ func AssignToServer(conn *net.UDPConn, server *net.UDPAddr, packet *socket.Packe
 	}
 
 	//send the message to the server
-	_, err = conn.WriteToUDP(b, server)
+	_, err = mainConn.WriteToUDP(b, server)
 	errors.CheckError(err)
 
 	log.SetOutput(flogL)
 	log.Printf("Assigned server %v to client %v ...\n", server, packet.SrcAddr)
-
 	fmt.Printf("Assigned server %v to client %v ...\n", server, packet.SrcAddr)
 }
 
@@ -103,8 +112,8 @@ func SendToClient(mainConn *net.UDPConn, packet *socket.Packet) {
 }
 
 //SendAckToClient which received from the server
-func SendAckToClient(mainConn *net.UDPConn, packet *socket.Packet) {
-	ack := socket.AckPacket{Seqno: packet.Seqno, SrcAddr: packet.SrcAddr, DstAddr: packet.DstAddr}
+func SendAckToClient(mainConn *net.UDPConn, addr *net.UDPAddr, packet *socket.AckPacket) {
+	ack := socket.AckPacket{Seqno: packet.Seqno, SrcAddr: addr, DstAddr: packet.DstAddr}
 
 	b, err := msgpack.Marshal(&ack)
 	if err != nil {
@@ -115,12 +124,12 @@ func SendAckToClient(mainConn *net.UDPConn, packet *socket.Packet) {
 	errors.CheckError(err)
 
 	log.SetOutput(flogL)
-	log.Printf("SenT ack packet from server %v to client %v ...\n", packet.SrcAddr, packet.DstAddr)
-	fmt.Printf("SenT ack packet from server %v to client %v ...\n", packet.SrcAddr, packet.DstAddr)
+	log.Printf("SenT ack packet from server %v to client %v ...\n", addr, packet.DstAddr)
+	fmt.Printf("SenT ack packet from server %v to client %v ...\n", addr, packet.DstAddr)
 }
 
 //SendAckToServer which is received from the client
-func SendAckToServer(connections map[*net.UDPAddr]*net.UDPConn, packet *socket.Packet) {
+func SendAckToServer(mainConn *net.UDPConn, packet *socket.AckPacket) {
 	ack := socket.AckPacket{Seqno: packet.Seqno, SrcAddr: packet.SrcAddr, DstAddr: packet.DstAddr}
 
 	b, err := msgpack.Marshal(&ack)
@@ -128,9 +137,7 @@ func SendAckToServer(connections map[*net.UDPAddr]*net.UDPConn, packet *socket.P
 		panic(err)
 	}
 
-	serverConn := connections[packet.DstAddr]
-
-	_, err = serverConn.WriteToUDP(b, packet.DstAddr)
+	_, err = mainConn.WriteToUDP(b, packet.DstAddr)
 	errors.CheckError(err)
 
 	log.SetOutput(flogL)

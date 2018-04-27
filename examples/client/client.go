@@ -92,9 +92,9 @@ func main() {
 		length, addr, err := mainConn.ReadFromUDP(buf[0:])
 		errors.CheckError(err)
 
-		if length > 100 {
+		if length > 115 {
 			go client.ReceiveFromServer(mainConn, buf, addr, algo)
-		} else if length > 0 && length < 100 {
+		} else if length > 0 && length < 115 {
 			go client.ReceiveAckFromServer()
 		}
 	}

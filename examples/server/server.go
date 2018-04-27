@@ -59,19 +59,14 @@ func convertToInt(s string) int16 {
 	return int16(value)
 }
 
-func getNextSocketAddr(windowSize int) *net.UDPAddr {
+func getNextSocketAddr(windowSize int) string {
 	//joining the IP address to the port
 	var addr bytes.Buffer
-	addr.WriteString(":")
 	lastPortInt, _ := strconv.Atoi(lastPort)
 	lastPort = strconv.Itoa(lastPortInt + 1)
 	addr.WriteString(lastPort)
 
-	serverInfo := ServerInfo{addr.String(), windowSize}
-	socketAddr, err := net.ResolveUDPAddr("udp", serverInfo.Address)
-	errors.CheckError(err)
-
-	return socketAddr
+	return addr.String()
 }
 
 func main() {
@@ -90,7 +85,7 @@ func main() {
 	dat, err := ioutil.ReadFile("./device_info/server.in")
 	errors.CheckError(err)
 	s := strings.Split(string(dat), "\n")
-	port, window, seed, plp := s[0], s[1], s[2], s[3]
+	ip, port, window, seed, plp := s[0], s[1], s[2], s[3], s[4]
 
 	seedValue = convertToFloat(seed)
 	p = convertToFloat(plp)
@@ -98,6 +93,7 @@ func main() {
 
 	//joining the IP address to the port
 	var address bytes.Buffer
+	address.WriteString(ip)
 	address.WriteString(":")
 	address.WriteString(port)
 
@@ -130,7 +126,21 @@ func main() {
 			err := msgpack.Unmarshal(buf, &packet)
 			errors.CheckError(err)
 
-			socketAddr := getNextSocketAddr(windowSize)
+			socketPort := getNextSocketAddr(windowSize)
+
+			fmt.Println("nextport ", socketPort)
+
+			//joining the IP address to the port
+			var bind bytes.Buffer
+			bind.WriteString(ip)
+			bind.WriteString(":")
+			bind.WriteString(socketPort)
+
+			fmt.Println("bind ", bind.String())
+
+			serverInfo := ServerInfo{bind.String(), windowSize}
+			socketAddr, err := net.ResolveUDPAddr("udp", serverInfo.Address)
+
 			server.SendAckToClient(mainConn, addr, socketAddr, &packet)
 			go server.ListenOnSocket(windowSize, algo, p, socketAddr, addr, &packet)
 		}
