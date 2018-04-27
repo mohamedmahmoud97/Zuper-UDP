@@ -6,7 +6,9 @@ https://camo.githubusercontent.com/915b7be44ada53c290eb157634330494ebe3e30a/6874
 )](https://godoc.org/github.com/mohamedmahmoud97/Zuper-UDP)
 [![License](https://img.shields.io/dub/l/vibe-d.svg)](https://github.com/mohamedmahmoud97/Zuper-UDP/blob/v2/LICENSE)
 
- A library for reliable data transfer service on top of the UDP protocol that supports loadbalancing and a lite reverse proxy. It also simulates packet loss and packet corruption and handles these issues for reliability.
+ A library for reliable data transfer service on top of the UDP protocol that supports loadbalancing and a lite version of reverse proxy. It also simulates packet loss and packet corruption and handles these issues for reliability.
+
+ 
 
 ## Installation
 You can use `go get` to install to your `$GOPATH`, assuming that you have a github.com parent folder already created under `src`:
