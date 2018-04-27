@@ -7,12 +7,9 @@ https://camo.githubusercontent.com/915b7be44ada53c290eb157634330494ebe3e30a/6874
 [![License](https://img.shields.io/dub/l/vibe-d.svg)](https://github.com/mohamedmahmoud97/Zuper-UDP/blob/v2/LICENSE)
 
  A library for reliable data transfer service on top of the UDP protocol that supports loadbalancing and a lite version of reverse proxy. It also simulates packet loss and packet corruption and handles these issues for reliability.
-
- ![alt text](https://github.com/mohamedmahmoud97/Zuper-UDP/blob/master/images/loadbalancer.jpg)
- ![](images/loadbalancer.jpg)
  
  <p align="center">
-  <img width="460" height="300" src="https://github.com/mohamedmahmoud97/Zuper-UDP/blob/master/images/loadbalancer.jpg">
+  <img width="600" height="299" src="https://github.com/mohamedmahmoud97/Zuper-UDP/blob/master/images/loadbalancer.jpg">
 </p>
 
 ## Installation
