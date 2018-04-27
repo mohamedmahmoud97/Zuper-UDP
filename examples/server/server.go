@@ -12,6 +12,8 @@ import (
 
 	errors "github.com/mohamedmahmoud97/Zuper-UDP/errors"
 	server "github.com/mohamedmahmoud97/Zuper-UDP/server"
+	"github.com/mohamedmahmoud97/Zuper-UDP/socket"
+	"github.com/vmihailenco/msgpack"
 )
 
 const (
@@ -118,14 +120,19 @@ func main() {
 
 	// go read from the connection
 	for {
-		buf := make([]byte, 600)
+		buf := make([]byte, 700)
 		length, addr, err := mainConn.ReadFromUDP(buf[0:])
 		errors.CheckError(err)
 
 		if length > 0 {
+			var packet socket.Packet
+
+			err := msgpack.Unmarshal(buf, &packet)
+			errors.CheckError(err)
+
 			socketAddr := getNextSocketAddr(windowSize)
-			server.SendAckToClient(mainConn, addr)
-			go server.ListenOnSocket(windowSize, algo, p, socketAddr, addr, buf, length)
+			server.SendAckToClient(mainConn, addr, socketAddr, &packet)
+			go server.ListenOnSocket(windowSize, algo, p, socketAddr, addr, &packet)
 		}
 	}
 }

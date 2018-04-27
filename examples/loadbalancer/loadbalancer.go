@@ -10,6 +10,8 @@ import (
 
 	"github.com/mohamedmahmoud97/Zuper-UDP/errors"
 	"github.com/mohamedmahmoud97/Zuper-UDP/loadbalance"
+	"github.com/mohamedmahmoud97/Zuper-UDP/socket"
+	"github.com/vmihailenco/msgpack"
 )
 
 const (
@@ -58,21 +60,31 @@ func main() {
 		errors.CheckError(err)
 
 		if length > 40 {
+			var packet socket.Packet
+
+			err := msgpack.Unmarshal(buf, &packet)
+			errors.CheckError(err)
+
 			if loadbalance.IsServer(addr, serversAddr) == true {
 				//send the chunks to client that is received from the server
-				loadbalance.SendToClient()
+				go loadbalance.SendToClient(mainConn, &packet)
 			} else {
 				//choose the best server to be assigned to this client request
 				bestServer := loadbalance.ChooseServer(serversAddr)
-				loadbalance.AssignToServer(serversConn[bestServer], buf)
+				go loadbalance.AssignToServer(serversConn[bestServer], bestServer, &packet)
 			}
 		} else if length > 0 && length < 40 {
+			var packet socket.AckPacket
+
+			err := msgpack.Unmarshal(buf, &packet)
+			errors.CheckError(err)
+
 			if loadbalance.IsServer(addr, serversAddr) == true {
 				//send ack to client upon its request
-				loadbalance.SendAckToClient()
+				go loadbalance.SendAckToClient(mainConn, &packet)
 			} else {
 				//send the ack to the server
-				loadbalance.SendAckToServer()
+				go loadbalance.SendAckToServer(serversConn, &packet)
 			}
 		}
 	}

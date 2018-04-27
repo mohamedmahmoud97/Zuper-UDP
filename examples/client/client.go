@@ -84,17 +84,17 @@ func main() {
 	defer flogC.Close()
 
 	//send the filename to the server
-	go client.SendToServer(mainConn, servAddr, initWindow, filename, flogC)
+	go client.SendToServer(mainConn, servAddr, localAddr, initWindow, filename, flogC)
 
 	// go read from the connection
 	for {
-		buf := make([]byte, 600)
+		buf := make([]byte, 700)
 		length, addr, err := mainConn.ReadFromUDP(buf[0:])
 		errors.CheckError(err)
 
-		if length > 40 {
+		if length > 100 {
 			go client.ReceiveFromServer(mainConn, buf, addr, algo)
-		} else if length > 0 && length < 40 {
+		} else if length > 0 && length < 100 {
 			go client.ReceiveAckFromServer()
 		}
 	}

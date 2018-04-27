@@ -38,7 +38,7 @@ func encodeFile(fileName string) []byte {
 	return dat
 }
 
-func sendToClient(conn *net.UDPConn, window int, addr *net.UDPAddr, algo, filename string, plp float32, AckCheck chan uint32) {
+func sendToClient(conn *net.UDPConn, window int, addr, socketAddr *net.UDPAddr, algo, filename string, plp float32, AckCheck chan uint32, packet *socket.Packet) {
 	//read file into bytes
 	dataBytes := encodeFile(filename)
 
@@ -56,12 +56,8 @@ func sendToClient(conn *net.UDPConn, window int, addr *net.UDPAddr, algo, filena
 	for seqNum < noChunks {
 		chunk := dataBytes[previous:r]
 		noOfBytes := uint16(len(chunk))
-		piko := socket.Packet{}
-		piko.Data = chunk
-		piko.Len = noOfBytes
-		piko.Seqno = seqNum
-		piko.PckNo = uint16(noChunks)
-		piko.Cksum = adler32.Checksum(chunk)
+		piko := socket.Packet{Data: chunk, Len: noOfBytes, Seqno: seqNum, PckNo: uint16(noChunks), Cksum: adler32.Checksum(chunk),
+			SrcAddr: socketAddr, DstAddr: packet.SrcAddr}
 		packets = append(packets, piko)
 		seqNum++
 		previous += size
@@ -92,8 +88,8 @@ func reliableSend(packets []socket.Packet, noChunks int, conn *net.UDPConn, wind
 }
 
 //SendAckToClient is for sending ack packet on received packet for requested file
-func SendAckToClient(conn *net.UDPConn, addr *net.UDPAddr) {
-	ack := socket.AckPacket{Seqno: 0}
+func SendAckToClient(conn *net.UDPConn, addr, socketAddr *net.UDPAddr, packet *socket.Packet) {
+	ack := socket.AckPacket{Seqno: 0, SrcAddr: socketAddr, DstAddr: packet.SrcAddr}
 
 	b, err := msgpack.Marshal(&ack)
 	if err != nil {
@@ -105,33 +101,19 @@ func SendAckToClient(conn *net.UDPConn, addr *net.UDPAddr) {
 }
 
 //ReceiveReqFromClients any packet
-func ReceiveReqFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.UDPAddr, windowSize int, algo string, plp float32, AckCheck chan uint32) {
-	var packet socket.Packet
-
-	err := msgpack.Unmarshal(buf, &packet)
-	if err != nil {
-		panic(err)
-	}
-
+func ReceiveReqFromClients(conn *net.UDPConn, packet *socket.Packet, addr, socketAddr *net.UDPAddr, windowSize int, algo string, plp float32, AckCheck chan uint32) {
+	//get filename
 	n := len(packet.Data)
 	filename := string(packet.Data[:n])
 	log.SetOutput(flogS)
 	log.Printf("A client requested filename: %v \n", filename)
 	fmt.Printf("requested the filename: %v \n", filename)
 
-	// sendAckToClient(conn, addr)
-	sendToClient(conn, windowSize, addr, algo, filename, plp, AckCheck)
+	sendToClient(conn, windowSize, addr, socketAddr, algo, filename, plp, AckCheck, packet)
 }
 
 //ReceiveAckFromClients any packet
-func ReceiveAckFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.UDPAddr, windowSize int, algo string, AckCheck chan uint32) {
-	var packet socket.AckPacket
-
-	err := msgpack.Unmarshal(buf, &packet)
-	if err != nil {
-		panic(err)
-	}
-
+func ReceiveAckFromClients(packet *socket.AckPacket, AckCheck chan uint32) {
 	log.SetOutput(flogS)
 	log.Printf("Received Ack of packet with seqno %v \n", packet.Seqno)
 	fmt.Printf("Received Ack of packet with seqno %v \n", packet.Seqno)
@@ -141,7 +123,7 @@ func ReceiveAckFromClients(conn *net.UDPConn, buf []byte, length int, addr *net.
 }
 
 //ListenOnSocket is a goroutine to make every client is handled by a separate socket
-func ListenOnSocket(windowSize int, algo string, p float32, socketAddr *net.UDPAddr, clientAddr *net.UDPAddr, buf []byte, length int) {
+func ListenOnSocket(windowSize int, algo string, p float32, socketAddr *net.UDPAddr, rcvAddr *net.UDPAddr, packet *socket.Packet) {
 	//create the socket in server-side
 	servConn := CreateSerSocket(socketAddr, flogS)
 	defer servConn.Close()
@@ -154,19 +136,29 @@ func ListenOnSocket(windowSize int, algo string, p float32, socketAddr *net.UDPA
 	var AckCheck = make(chan uint32)
 
 	//handle the requested file
-	go ReceiveReqFromClients(servConn, buf, length, clientAddr, windowSize, algo, p, AckCheck)
+	go ReceiveReqFromClients(servConn, packet, rcvAddr, socketAddr, windowSize, algo, p, AckCheck)
 
 	// go read from the connection
 	for {
-		buf := make([]byte, 600)
+		buf := make([]byte, 700)
 		length, addr, err := servConn.ReadFromUDP(buf[0:])
 		errors.CheckError(err)
 
-		if length > 40 {
+		if length > 100 {
 			fmt.Print("receiving data packet from client ... \n")
-			go ReceiveReqFromClients(servConn, buf, length, addr, windowSize, algo, p, AckCheck)
-		} else if length > 0 && length < 40 {
-			go ReceiveAckFromClients(servConn, buf, length, addr, windowSize, algo, AckCheck)
+			var packet socket.Packet
+
+			err := msgpack.Unmarshal(buf, &packet)
+			errors.CheckError(err)
+
+			go ReceiveReqFromClients(servConn, &packet, addr, socketAddr, windowSize, algo, p, AckCheck)
+		} else if length > 0 && length < 100 {
+			var packet socket.AckPacket
+
+			err := msgpack.Unmarshal(buf, &packet)
+			errors.CheckError(err)
+
+			go ReceiveAckFromClients(&packet, AckCheck)
 		}
 	}
 }

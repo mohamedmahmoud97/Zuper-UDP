@@ -37,7 +37,7 @@ func CreateClientSocket(localAddr *net.UDPAddr) *net.UDPConn {
 }
 
 //SendToServer the filename of the needed file
-func SendToServer(conn *net.UDPConn, servAddr *net.UDPAddr, window int, filename string, flogc *os.File) {
+func SendToServer(conn *net.UDPConn, servAddr, localAddr *net.UDPAddr, window int, filename string, flogc *os.File) {
 	flogC = flogc
 	log.SetOutput(flogC)
 	log.Printf("client is requesting file %v from server ... \n", filename)
@@ -48,7 +48,7 @@ func SendToServer(conn *net.UDPConn, servAddr *net.UDPAddr, window int, filename
 	file := []byte(filename)
 
 	noOfBytes := uint16(len(file))
-	reqPacket := socket.Packet{Data: file, PckNo: 1, Len: noOfBytes}
+	reqPacket := socket.Packet{Data: file, PckNo: 1, Len: noOfBytes, SrcAddr: localAddr, DstAddr: servAddr}
 
 	b, err := msgpack.Marshal(&reqPacket)
 	if err != nil {
@@ -74,14 +74,14 @@ func SendToServer(conn *net.UDPConn, servAddr *net.UDPAddr, window int, filename
 	goSend := resendReq(quit)
 
 	if goSend {
-		SendToServer(conn, servAddr, window, filename, flogC)
+		SendToServer(conn, servAddr, localAddr, window, filename, flogC)
 	} else if !goSend {
 		quit <- 0
 	}
 }
 
 func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, packet *socket.Packet) {
-	ack := socket.AckPacket{Seqno: packet.Seqno}
+	ack := socket.AckPacket{Seqno: packet.Seqno, SrcAddr: packet.DstAddr, DstAddr: packet.SrcAddr}
 
 	b, err := msgpack.Marshal(&ack)
 	if err != nil {

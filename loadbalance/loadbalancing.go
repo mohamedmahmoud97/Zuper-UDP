@@ -1,10 +1,14 @@
 package loadbalance
 
 import (
+	"fmt"
+	"log"
 	"net"
 	"os"
 
 	"github.com/mohamedmahmoud97/Zuper-UDP/errors"
+	"github.com/mohamedmahmoud97/Zuper-UDP/socket"
+	"github.com/vmihailenco/msgpack"
 )
 
 var (
@@ -51,11 +55,6 @@ func ChooseServer(serversAddr []*net.UDPAddr) *net.UDPAddr {
 	return serversAddr[temp]
 }
 
-//AssignToServer a request from client
-func AssignToServer(conn *net.UDPConn, buf []byte) {
-
-}
-
 //IsServer is to check if the incoming packet is from a server or not
 func IsServer(addr *net.UDPAddr, servers []*net.UDPAddr) bool {
 	for i := 0; i < len(servers); i++ {
@@ -66,17 +65,75 @@ func IsServer(addr *net.UDPAddr, servers []*net.UDPAddr) bool {
 	return false
 }
 
+//AssignToServer a request from client
+func AssignToServer(conn *net.UDPConn, server *net.UDPAddr, packet *socket.Packet) {
+	pck := socket.Packet{Data: packet.Data, PckNo: packet.PckNo, Len: packet.Len, SrcAddr: packet.SrcAddr, DstAddr: server}
+	b, err := msgpack.Marshal(&pck)
+	if err != nil {
+		panic(err)
+	}
+
+	//send the message to the server
+	_, err = conn.WriteToUDP(b, server)
+	errors.CheckError(err)
+
+	log.SetOutput(flogL)
+	log.Printf("Assigned server %v to client %v ...\n", server, packet.SrcAddr)
+
+	fmt.Printf("Assigned server %v to client %v ...\n", server, packet.SrcAddr)
+}
+
 //SendToClient the datagrams received from the server
-func SendToClient() {
+func SendToClient(mainConn *net.UDPConn, packet *socket.Packet) {
+	pck := socket.Packet{Data: packet.Data, Len: packet.Len, Seqno: packet.Seqno, PckNo: packet.PckNo, Cksum: packet.Cksum,
+		SrcAddr: packet.SrcAddr, DstAddr: packet.DstAddr}
+	b, err := msgpack.Marshal(&pck)
+	if err != nil {
+		panic(err)
+	}
+
+	//send the message to the server
+	_, err = mainConn.WriteToUDP(b, packet.DstAddr)
+	errors.CheckError(err)
+
+	log.SetOutput(flogL)
+	log.Printf("SenT packet %v from server %v to client %v ...\n", packet.Seqno, packet.SrcAddr, packet.DstAddr)
+	fmt.Printf("SenT packet %v from server %v to client %v ...\n", packet.Seqno, packet.SrcAddr, packet.DstAddr)
 
 }
 
 //SendAckToClient which received from the server
-func SendAckToClient() {
+func SendAckToClient(mainConn *net.UDPConn, packet *socket.Packet) {
+	ack := socket.AckPacket{Seqno: packet.Seqno, SrcAddr: packet.SrcAddr, DstAddr: packet.DstAddr}
 
+	b, err := msgpack.Marshal(&ack)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = mainConn.WriteToUDP(b, packet.DstAddr)
+	errors.CheckError(err)
+
+	log.SetOutput(flogL)
+	log.Printf("SenT ack packet from server %v to client %v ...\n", packet.SrcAddr, packet.DstAddr)
+	fmt.Printf("SenT ack packet from server %v to client %v ...\n", packet.SrcAddr, packet.DstAddr)
 }
 
 //SendAckToServer which is received from the client
-func SendAckToServer() {
+func SendAckToServer(connections map[*net.UDPAddr]*net.UDPConn, packet *socket.Packet) {
+	ack := socket.AckPacket{Seqno: packet.Seqno, SrcAddr: packet.SrcAddr, DstAddr: packet.DstAddr}
 
+	b, err := msgpack.Marshal(&ack)
+	if err != nil {
+		panic(err)
+	}
+
+	serverConn := connections[packet.DstAddr]
+
+	_, err = serverConn.WriteToUDP(b, packet.DstAddr)
+	errors.CheckError(err)
+
+	log.SetOutput(flogL)
+	log.Printf("SenT ack packet %v from client %v to server %v ...\n", packet.Seqno, packet.SrcAddr, packet.DstAddr)
+	fmt.Printf("SenT ack packet %v from client %v to server %v ...\n", packet.Seqno, packet.SrcAddr, packet.DstAddr)
 }
