@@ -34,7 +34,7 @@ const (
 //ServerInfo is a struct to server info
 type ServerInfo struct {
 	//PortNumber of the server
-	PortNumber string
+	Address string
 	//MaxWindow is the max sliding-window size
 	MaxWindow int
 }
@@ -66,7 +66,7 @@ func getNextSocketAddr(windowSize int) *net.UDPAddr {
 	addr.WriteString(lastPort)
 
 	serverInfo := ServerInfo{addr.String(), windowSize}
-	socketAddr, err := net.ResolveUDPAddr("udp", serverInfo.PortNumber)
+	socketAddr, err := net.ResolveUDPAddr("udp", serverInfo.Address)
 	errors.CheckError(err)
 
 	return socketAddr
@@ -100,7 +100,7 @@ func main() {
 	address.WriteString(port)
 
 	serverInfo := ServerInfo{address.String(), windowSize}
-	servAddr, err := net.ResolveUDPAddr("udp", serverInfo.PortNumber)
+	servAddr, err := net.ResolveUDPAddr("udp", serverInfo.Address)
 	fmt.Printf("started connection in server on port %v ... \n", servAddr)
 	errors.CheckError(err)
 
@@ -124,7 +124,7 @@ func main() {
 
 		if length > 0 {
 			socketAddr := getNextSocketAddr(windowSize)
-			server.SendAckToClient(mainConn, addr, socketAddr)
+			server.SendAckToClient(mainConn, addr)
 			go server.ListenOnSocket(windowSize, algo, p, socketAddr, addr, buf, length)
 		}
 	}

@@ -92,8 +92,8 @@ func reliableSend(packets []socket.Packet, noChunks int, conn *net.UDPConn, wind
 }
 
 //SendAckToClient is for sending ack packet on received packet for requested file
-func SendAckToClient(conn *net.UDPConn, addr *net.UDPAddr, socketAddr *net.UDPAddr) {
-	ack := socket.AckPacket{Seqno: 0, Addr: socketAddr}
+func SendAckToClient(conn *net.UDPConn, addr *net.UDPAddr) {
+	ack := socket.AckPacket{Seqno: 0}
 
 	b, err := msgpack.Marshal(&ack)
 	if err != nil {
