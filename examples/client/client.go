@@ -95,7 +95,7 @@ func main() {
 		if length > 115 {
 			go client.ReceiveFromServer(mainConn, buf, addr, algo)
 		} else if length > 0 && length < 115 {
-			go client.ReceiveAckFromServer()
+			go client.ReceiveAckFromServer(buf)
 		}
 	}
 }

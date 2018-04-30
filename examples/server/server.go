@@ -140,7 +140,6 @@ func main() {
 			serverInfo := ServerInfo{bind.String(), windowSize}
 			socketAddr, err := net.ResolveUDPAddr("udp", serverInfo.Address)
 
-			server.SendAckToClient(mainConn, addr, socketAddr, &packet)
 			go server.ListenOnSocket(windowSize, algo, p, socketAddr, addr, &packet)
 		}
 	}

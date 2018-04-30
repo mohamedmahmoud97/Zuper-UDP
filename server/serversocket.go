@@ -89,7 +89,7 @@ func reliableSend(packets []socket.Packet, noChunks int, conn *net.UDPConn, wind
 
 //SendAckToClient is for sending ack packet on received packet for requested file
 func SendAckToClient(conn *net.UDPConn, addr, socketAddr *net.UDPAddr, packet *socket.Packet) {
-	ack := socket.AckPacket{Seqno: 0, SrcAddr: socketAddr, DstAddr: packet.SrcAddr}
+	ack := socket.AckPacket{Seqno: 1, SrcAddr: socketAddr, DstAddr: packet.SrcAddr}
 
 	b, err := msgpack.Marshal(&ack)
 	if err != nil {
@@ -109,7 +109,21 @@ func ReceiveReqFromClients(conn *net.UDPConn, packet *socket.Packet, addr, socke
 	log.Printf("A client requested filename: %v \n", filename)
 	fmt.Printf("requested the filename: %v \n", filename)
 
-	sendToClient(conn, windowSize, addr, socketAddr, algo, filename, plp, AckCheck, packet)
+	path := "./" + filename
+	if _, err := os.Stat(path); err == nil {
+		SendAckToClient(conn, addr, socketAddr, packet)
+		sendToClient(conn, windowSize, addr, socketAddr, algo, filename, plp, AckCheck, packet)
+	} else {
+		ack := socket.AckPacket{Seqno: 0, SrcAddr: socketAddr, DstAddr: packet.SrcAddr}
+
+		b, err := msgpack.Marshal(&ack)
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = conn.WriteToUDP(b, addr)
+		errors.CheckError(err)
+	}
 }
 
 //ReceiveAckFromClients any packet

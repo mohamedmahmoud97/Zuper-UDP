@@ -26,17 +26,17 @@ func fileTimer(start time.Time, quit chan uint32) {
 }
 
 // check if we have to resend the packet or not
-func resendReq(quit chan uint32) bool {
+func resendReq(quit chan uint32) (uint32, bool) {
 	select {
-	case <-AckFileCheck:
+	case exists := <-AckFileCheck:
 		log.SetOutput(flogC)
 		log.Println("Received an ack from the server ... ")
 		fmt.Println("Received an ack from the server ... ")
-		return false
+		return exists, false
 	case <-quit:
 		log.SetOutput(flogC)
 		log.Println("Will resend the requested file again ... ")
 		fmt.Println("Will resend the requested file again ... ")
-		return true
+		return 0, true
 	}
 }

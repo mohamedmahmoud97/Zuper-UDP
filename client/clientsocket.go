@@ -17,7 +17,7 @@ import (
 
 var (
 	//AckFileCheck is channel on receiving ack on file request
-	AckFileCheck = make(chan int)
+	AckFileCheck = make(chan uint32)
 	//RecData is the buffer of all data received
 	RecData           = make([]byte, pckNo*512)
 	lastAck     int32 = -1
@@ -57,7 +57,6 @@ func SendToServer(conn *net.UDPConn, servAddr, localAddr *net.UDPAddr, window in
 
 	log.SetOutput(flogC)
 	log.Println("Encoded the message ...")
-
 	fmt.Println("Encoded the message ...")
 
 	//send the message to the server
@@ -71,11 +70,19 @@ func SendToServer(conn *net.UDPConn, servAddr, localAddr *net.UDPAddr, window in
 
 	//check if the time exceeded or it received the ack
 	go fileTimer(start, quit)
-	goSend := resendReq(quit)
+	exists, goSend := resendReq(quit)
 
 	if goSend {
 		SendToServer(conn, servAddr, localAddr, window, filename, flogC)
 	} else if !goSend {
+		if exists == 0 {
+			//file doesn't exists terminate program
+			log.Println("File doesn't exists ...")
+			fmt.Println("File doesn't exists ...")
+			os.Exit(1)
+		} else if exists == 1 {
+			//file exists don't do anything
+		}
 		quit <- 0
 	}
 }
@@ -133,13 +140,20 @@ func ReceiveFromServer(conn *net.UDPConn, buf []byte, addr *net.UDPAddr, algo st
 }
 
 //ReceiveAckFromServer any packet
-func ReceiveAckFromServer() {
+func ReceiveAckFromServer(buf []byte) {
+	var packet socket.AckPacket
+
+	err := msgpack.Unmarshal(buf, &packet)
+	if err != nil {
+		panic(err)
+	}
+
 	log.SetOutput(flogC)
 	log.Println("Received Ack of requested file packet ...")
 	fmt.Printf("Received Ack of requested file packet ... \n")
 
 	//a channel for sending seqno
-	AckFileCheck <- 1
+	AckFileCheck <- packet.Seqno
 }
 
 ///append to buffer to build file later on
