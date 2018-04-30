@@ -38,19 +38,6 @@ func CreateServersAddr(servers []string) []*net.UDPAddr {
 	return serversAddr
 }
 
-//CreateSockets between all servers and the loadbalancer
-func CreateSockets(servers []*net.UDPAddr) map[*net.UDPAddr]*net.UDPConn {
-	//a map of addresses with its connections
-	serversConn := make(map[*net.UDPAddr]*net.UDPConn, len(servers))
-	for i := 0; i < len(servers); i++ {
-		//create the socket on the port number
-		servConn, err := net.ListenUDP("udp", servers[i])
-		errors.CheckError(err)
-		serversConn[servers[i]] = servConn
-	}
-	return serversConn
-}
-
 //ChooseServer with weightedRoundRobin algorithm
 func ChooseServer(serversAddr []*net.UDPAddr) *net.UDPAddr {
 	temp := n % len(serversAddr)
