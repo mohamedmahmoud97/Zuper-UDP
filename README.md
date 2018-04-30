@@ -2,6 +2,7 @@
 [![Build Status](https://travis-ci.com/mohamedmahmoud97/Zuper-UDP.svg?token=aQtpZzy2UuNChYAfpRmS&branch=master)](https://travis-ci.com/mohamedmahmoud97/Zuper-UDP)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mohamedmahmoud97/Zuper-UDP)](https://goreportcard.com/report/github.com/mohamedmahmoud97/Zuper-UDP)
 [![Documentation Status](https://readthedocs.org/projects/zuper-udp/badge/?version=latest)](http://zuper-udp.readthedocs.io/en/latest/?badge=latest)
+[![HitCount](http://hits.dwyl.io/mohamedmahmoud97/Zuper-UDP.svg)](http://hits.dwyl.io/mohamedmahmoud97/Zuper-UDP)
 [![License](https://img.shields.io/dub/l/vibe-d.svg)](https://github.com/mohamedmahmoud97/Zuper-UDP/blob/v2/LICENSE)
 
  A library for reliable data transfer service on top of the UDP protocol that supports loadbalancing and a lite version of reverse proxy. It also simulates packet loss and packet corruption and handles these issues for reliability.
