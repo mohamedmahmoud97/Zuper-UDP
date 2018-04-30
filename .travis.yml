@@ -1,7 +1,18 @@
-language: generic
+language: go
   go:
     - "1.9.x"
     - master
 
 os:
   - linux
+
+before_install:
+  - go get -t -v ./...
+
+script:
+  - go run examples/loadbalancer/loadbalancer.go
+  - go run examples/server/server.go
+  - go run examples/client/client.go
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
