@@ -65,7 +65,6 @@ func getNextSocketAddr(windowSize int) string {
 	lastPortInt, _ := strconv.Atoi(lastPort)
 	lastPort = strconv.Itoa(lastPortInt + 1)
 	addr.WriteString(lastPort)
-
 	return addr.String()
 }
 
