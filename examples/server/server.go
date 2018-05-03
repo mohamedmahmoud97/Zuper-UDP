@@ -59,7 +59,7 @@ func convertToInt(s string) int16 {
 	return int16(value)
 }
 
-func getNextSocketAddr(windowSize int) string {
+func getNextSocketAddr() string {
 	//joining the IP address to the port
 	var addr bytes.Buffer
 	lastPortInt, _ := strconv.Atoi(lastPort)
@@ -125,9 +125,7 @@ func main() {
 			err := msgpack.Unmarshal(buf, &packet)
 			errors.CheckError(err)
 
-			socketPort := getNextSocketAddr(windowSize)
-
-			fmt.Println("nextport ", socketPort)
+			socketPort := getNextSocketAddr()
 
 			//joining the IP address to the port
 			var bind bytes.Buffer

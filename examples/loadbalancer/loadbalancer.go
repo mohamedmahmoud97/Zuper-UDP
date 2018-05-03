@@ -1,12 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
+	"strconv"
 	"strings"
+
+	"github.com/mohamedmahmoud97/Zuper-UDP/server"
 
 	"github.com/mohamedmahmoud97/Zuper-UDP/errors"
 	"github.com/mohamedmahmoud97/Zuper-UDP/loadbalance"
@@ -15,6 +19,7 @@ import (
 )
 
 const (
+	p = 0.1
 	// BANNER is what is printed for help/info output.
 	BANNER = ` 
  _ _ _                          _    _ ___   _ __
@@ -31,6 +36,19 @@ const (
 `
 )
 
+var (
+	lastPort string
+)
+
+func getNextSocketAddr() string {
+	//joining the IP address to the port
+	var addr bytes.Buffer
+	lastPortInt, _ := strconv.Atoi(lastPort)
+	lastPort = strconv.Itoa(lastPortInt + 1)
+	addr.WriteString(lastPort)
+	return addr.String()
+}
+
 func main() {
 	//print the logo to the terminal
 	flag.Usage = func() {
@@ -39,6 +57,9 @@ func main() {
 	}
 	flag.Parse()
 	flag.Usage()
+
+	//The algorithm to be used in reliability
+	algo := os.Args[1]
 
 	//Reading Loadbalancer info from file
 	dat, err := ioutil.ReadFile("./device_info/loadbalancer.in")
@@ -58,6 +79,9 @@ func main() {
 
 	//make the UDP addresses for all servers
 	serversAddr := loadbalance.CreateServersAddr(servers)
+	serverIP := serversAddr[0].IP
+	serverPort := serversAddr[0].Port
+	lastPort = strconv.Itoa(serverPort)
 
 	for {
 		buf := make([]byte, 700)
@@ -65,6 +89,7 @@ func main() {
 		errors.CheckError(err)
 
 		if length > 115 {
+			// receiving data packets
 			var packet socket.Packet
 
 			err := msgpack.Unmarshal(buf, &packet)
@@ -74,11 +99,28 @@ func main() {
 				//send the chunks to client that is received from the server
 				go loadbalance.SendToClient(mainConn, &packet)
 			} else {
-				//choose the best server to be assigned to this client request
-				bestServer := loadbalance.ChooseServer(serversAddr)
-				go loadbalance.AssignToServer(mainConn, bestServer, &packet)
+				path := "./" + string(packet.Data)
+				if _, err := os.Stat(path); err == nil {
+					socketPort := getNextSocketAddr()
+
+					//joining the IP address to the port
+					var bind bytes.Buffer
+					bind.WriteString(serverIP.String())
+					bind.WriteString(":")
+					bind.WriteString(socketPort)
+
+					socketAddr, err := net.ResolveUDPAddr("udp", bind.String())
+					errors.CheckError(err)
+
+					go server.ListenOnSocket(5, algo, p, socketAddr, addr, &packet)
+				} else {
+					//choose the best server to be assigned to this client request
+					bestServer := loadbalance.ChooseServer(serversAddr)
+					go loadbalance.AssignToServer(mainConn, bestServer, &packet)
+				}
 			}
 		} else if length > 0 && length < 115 {
+			// receiving ack packets
 			var packet socket.AckPacket
 
 			err := msgpack.Unmarshal(buf, &packet)

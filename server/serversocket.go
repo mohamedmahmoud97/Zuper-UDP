@@ -38,7 +38,8 @@ func encodeFile(fileName string) []byte {
 	return dat
 }
 
-func sendToClient(conn *net.UDPConn, window int, addr, socketAddr *net.UDPAddr, algo, filename string, plp float32, AckCheck chan uint32, packet *socket.Packet) {
+//SendToClient is a function to make the packets and prepare them to be sent to clients
+func SendToClient(conn *net.UDPConn, window int, addr, socketAddr *net.UDPAddr, algo, filename string, plp float32, AckCheck chan uint32, packet *socket.Packet) {
 	//read file into bytes
 	dataBytes := encodeFile(filename)
 
@@ -109,10 +110,11 @@ func ReceiveReqFromClients(conn *net.UDPConn, packet *socket.Packet, addr, socke
 	log.Printf("A client requested filename: %v \n", filename)
 	fmt.Printf("requested the filename: %v \n", filename)
 
+	//check if the file is found or not
 	path := "./" + filename
 	if _, err := os.Stat(path); err == nil {
 		SendAckToClient(conn, addr, socketAddr, packet)
-		sendToClient(conn, windowSize, addr, socketAddr, algo, filename, plp, AckCheck, packet)
+		SendToClient(conn, windowSize, addr, socketAddr, algo, filename, plp, AckCheck, packet)
 	} else {
 		ack := socket.AckPacket{Seqno: 0, SrcAddr: socketAddr, DstAddr: packet.SrcAddr}
 
