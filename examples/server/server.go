@@ -59,12 +59,13 @@ func convertToInt(s string) int16 {
 	return int16(value)
 }
 
-func getNextSocketAddr() string {
+func getNextSocketAddr(windowSize int) string {
 	//joining the IP address to the port
 	var addr bytes.Buffer
 	lastPortInt, _ := strconv.Atoi(lastPort)
 	lastPort = strconv.Itoa(lastPortInt + 1)
 	addr.WriteString(lastPort)
+
 	return addr.String()
 }
 
@@ -125,7 +126,9 @@ func main() {
 			err := msgpack.Unmarshal(buf, &packet)
 			errors.CheckError(err)
 
-			socketPort := getNextSocketAddr()
+			socketPort := getNextSocketAddr(windowSize)
+
+			fmt.Println("nextport ", socketPort)
 
 			//joining the IP address to the port
 			var bind bytes.Buffer
@@ -138,6 +141,7 @@ func main() {
 			serverInfo := ServerInfo{bind.String(), windowSize}
 			socketAddr, err := net.ResolveUDPAddr("udp", serverInfo.Address)
 
+			server.SendAckToClient(mainConn, addr, socketAddr, &packet)
 			go server.ListenOnSocket(windowSize, algo, p, socketAddr, addr, &packet)
 		}
 	}

@@ -7,14 +7,17 @@ import (
 	"os"
 	"strings"
 
+	"github.com/mohamedmahmoud97/Zuper-UDP/client"
 	"github.com/mohamedmahmoud97/Zuper-UDP/errors"
 	"github.com/mohamedmahmoud97/Zuper-UDP/socket"
 	"github.com/vmihailenco/msgpack"
 )
 
 var (
-	flogL *os.File
-	n     int
+	flogL         *os.File
+	n             int
+	buffer        = map[string]map[int][]byte{}
+	filenamesBuff = make(map[string]string)
 )
 
 //CreateMainSocket for loadbalancer to listen on this port
@@ -29,8 +32,8 @@ func CreateMainSocket(addr *net.UDPAddr, log *os.File) *net.UDPConn {
 
 //CreateServersAddr is creating UDP addresses for all servers
 func CreateServersAddr(servers []string) []*net.UDPAddr {
-	serversAddr := make([]*net.UDPAddr, len(servers)-1)
-	for i, addr := range servers[1:] {
+	serversAddr := make([]*net.UDPAddr, len(servers)-2)
+	for i, addr := range servers[1 : len(servers)-1] {
 		servAddr, err := net.ResolveUDPAddr("udp", addr)
 		errors.CheckError(err)
 		serversAddr[i] = servAddr
@@ -130,4 +133,32 @@ func SendAckToServer(mainConn *net.UDPConn, packet *socket.AckPacket) {
 	log.SetOutput(flogL)
 	log.Printf("SenT ack packet %v from client %v to server %v ...\n", packet.Seqno, packet.SrcAddr, packet.DstAddr)
 	fmt.Printf("SenT ack packet %v from client %v to server %v ...\n", packet.Seqno, packet.SrcAddr, packet.DstAddr)
+}
+
+//AppendToBuffer is a function to append received packet to buffer if file not cached
+func AppendToBuffer(packet *socket.Packet, algo string) {
+	//check if packet is added to buffer
+	if _, exist := buffer[packet.DstAddr.String()]; exist {
+		if _, exist2 := buffer[packet.DstAddr.String()][int(packet.Seqno)]; exist2 {
+			//do nothing
+		} else {
+			log.SetOutput(flogL)
+			log.Printf("Buffering packet %v requested from client %v ... \n", packet.Seqno, packet.DstAddr)
+			fmt.Printf("Buffering packet %v requested from client %v ... \n", packet.Seqno, packet.DstAddr)
+			buffer[packet.DstAddr.String()][int(packet.Seqno)] = packet.Data
+			client.CheckOnPck(packet, algo, buffer[packet.DstAddr.String()], filenamesBuff[packet.DstAddr.String()])
+		}
+	} else {
+		buffer[packet.DstAddr.String()] = make(map[int][]byte)
+		log.SetOutput(flogL)
+		log.Printf("Buffering first packet %v requested from client %v ... \n", packet.Seqno, packet.DstAddr)
+		fmt.Printf("Buffering first packet %v requested from client %v ... \n", packet.Seqno, packet.DstAddr)
+		buffer[packet.DstAddr.String()][int(packet.Seqno)] = packet.Data
+	}
+}
+
+//SaveFileName is a function to save filename to a buffer for later use in building file
+func SaveFileName(addr *net.UDPAddr, filename string) {
+	filenamesBuff[addr.String()] = filename
+	fmt.Println(filenamesBuff)
 }
