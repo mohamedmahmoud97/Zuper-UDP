@@ -5,7 +5,7 @@
 [![HitCount](http://hits.dwyl.io/mohamedmahmoud97/Zuper-UDP.svg)](http://hits.dwyl.io/mohamedmahmoud97/Zuper-UDP)
 [![License](https://img.shields.io/dub/l/vibe-d.svg)](https://github.com/mohamedmahmoud97/Zuper-UDP/blob/v2/LICENSE)
 
- A library for reliable data transfer service on top of the UDP protocol that supports loadbalancing and a lite version of reverse proxy. It also simulates packet loss and packet corruption and handles these issues for reliability.
+ A library for reliable data transfer service on top of the UDP protocol that supports loadbalancing and reverse proxy features which loadbalances client requests on the servers and also caches the files at the proxy to decrease response time to the clients and reduces the load on the backend servers. The loadbalancer also works with the reliable data transfer service on top of the UDP. The library simulates packet loss and packet corruption and handles these issues for reliability.
  
  <p align="center">
   <img width="600" height="299" src="https://github.com/mohamedmahmoud97/Zuper-UDP/blob/master/images/loadbalancer.jpg">
@@ -19,7 +19,7 @@ $ go get -t github.com/mohamedmahmoud97/Zuper-UDP
 
 ## Usage
 ```
-$ go run examples/loadbalancer/loadbalancer.go
+$ go run examples/loadbalancer/loadbalancer.go sr
  
  _ _ _                          _    _ ___   _ __
 |_ _  | _   _ _ __   ___  _ __ | |  | |._ \ | ._ \
@@ -36,9 +36,9 @@ $ go run examples/loadbalancer/loadbalancer.go
 
 ## Test it 
 
-You can test the library with running any of the bash files: `gbn.sh` for testing GoBackN algorithm, `sr.sh` for SelectiveRepeat, and `sw.sh` for Stop-and-Wait. You can also change the parameters for the client, the server, and the loadbalancer in `device_info/client.in` and `device_info/server.in`, and `device_info/loadbalancer.in`. If you want to neglect the simulation probability packet loss just change last attribute in `server.in` to 0.
+You can test the server-client library with running any of the bash files: `gbn.sh` for testing GoBackN algorithm, `sr.sh` for SelectiveRepeat, and `sw.sh` for Stop-and-Wait. You can also change the parameters for the client, the server, and the loadbalancer in `device_info/client.in` and `device_info/server.in`, and `device_info/loadbalancer.in`. If you want to neglect the simulation probability packet loss just change last attribute in `server.in` to 0. 
 
-You can also test it by running a loadbalancer by running `go run examples/loadbalancer/loadbalancer.go` and run some servers and clients and make the server address attribute for all clients is the address of the loadbalancer.
+You can also test it the loadbalancer by running `go run examples/loadbalancer/loadbalancer.go` and run some servers by running `go run examples/server/server.go sr` and run client to request files by running `go run examples/client/client.go sr`, but don't fforget to change the server address attribute for all clients is the address of the loadbalancer.
 
 #### **For Client**
 ```
