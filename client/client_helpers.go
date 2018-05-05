@@ -35,8 +35,8 @@ func resendReq(quit chan uint32) (uint32, bool) {
 		return exists, false
 	case <-quit:
 		log.SetOutput(flogC)
-		log.Println("Will resend the requested file again ... ")
-		fmt.Println("Will resend the requested file again ... ")
+		log.Println("Will resend the request again ... ")
+		fmt.Println("Will resend the request again ... ")
 		return 0, true
 	}
 }

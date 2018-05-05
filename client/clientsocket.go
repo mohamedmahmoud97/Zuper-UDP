@@ -193,8 +193,8 @@ func buildFile(algo string, buffer map[int][]byte, filename string) {
 	err := ioutil.WriteFile(filename, recData, 0644)
 	errors.CheckError(err)
 	log.SetOutput(flogC)
-	log.Println("Finished ... ")
-	fmt.Println("Finished ... ")
+	log.Println("Finished building file ... ")
+	fmt.Println("Finished building file ... ")
 }
 
 //CheckOnPck is checking if the packet is the last packet or not
@@ -203,7 +203,6 @@ func CheckOnPck(packet *socket.Packet, algo string, buffer map[int][]byte, filen
 		pckNo = packet.PckNo
 		return 0
 	} else if int(packet.Seqno) == int(packet.PckNo)-1 {
-		fmt.Println(filename)
 		time.Sleep(5 * time.Millisecond)
 		buildFile(algo, buffer, filename)
 		return 1

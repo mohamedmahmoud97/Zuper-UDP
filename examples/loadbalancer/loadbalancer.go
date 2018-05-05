@@ -79,8 +79,8 @@ func main() {
 
 	//make the UDP addresses for all servers
 	serversAddr := loadbalance.CreateServersAddr(servers)
-	serverIP := serversAddr[0].IP
-	serverPort := serversAddr[0].Port
+	serverIP := mainAddr.IP
+	serverPort := mainAddr.Port
 	lastPort = strconv.Itoa(serverPort)
 
 	for {
@@ -111,6 +111,7 @@ func main() {
 					bind.WriteString(socketPort)
 
 					socketAddr, err := net.ResolveUDPAddr("udp", bind.String())
+
 					errors.CheckError(err)
 
 					go server.ListenOnSocket(10, algo, p, socketAddr, addr, &packet)
