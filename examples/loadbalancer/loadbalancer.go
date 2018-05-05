@@ -12,6 +12,7 @@ import (
 
 	"github.com/mohamedmahmoud97/Zuper-UDP/errors"
 	"github.com/mohamedmahmoud97/Zuper-UDP/loadbalance"
+	"github.com/mohamedmahmoud97/Zuper-UDP/server"
 	"github.com/mohamedmahmoud97/Zuper-UDP/socket"
 	"github.com/vmihailenco/msgpack"
 )
@@ -78,7 +79,7 @@ func main() {
 
 	//make the UDP addresses for all servers
 	serversAddr := loadbalance.CreateServersAddr(servers)
-	// serverIP := serversAddr[0].IP
+	serverIP := serversAddr[0].IP
 	serverPort := serversAddr[0].Port
 	lastPort = strconv.Itoa(serverPort)
 
@@ -99,28 +100,28 @@ func main() {
 				go loadbalance.SendToClient(mainConn, &packet)
 				go loadbalance.AppendToBuffer(&packet, algo)
 			} else {
-				// path := "./" + string(packet.Data)
-				// if _, err := os.Stat(path); err == nil {
-				// 	socketPort := getNextSocketAddr()
+				path := "./" + string(packet.Data)
+				if _, err := os.Stat(path); err == nil {
+					socketPort := getNextSocketAddr()
 
-				// 	//joining the IP address to the port
-				// 	var bind bytes.Buffer
-				// 	bind.WriteString(serverIP.String())
-				// 	bind.WriteString(":")
-				// 	bind.WriteString(socketPort)
+					//joining the IP address to the port
+					var bind bytes.Buffer
+					bind.WriteString(serverIP.String())
+					bind.WriteString(":")
+					bind.WriteString(socketPort)
 
-				// 	socketAddr, err := net.ResolveUDPAddr("udp", bind.String())
-				// 	errors.CheckError(err)
+					socketAddr, err := net.ResolveUDPAddr("udp", bind.String())
+					errors.CheckError(err)
 
-				// 	go server.ListenOnSocket(5, algo, p, socketAddr, addr, &packet)
-				// } else {
-				// 	//add filename to buffer
-				// 	go loadbalance.SaveFileName(addr, string(packet.Data))
+					go server.ListenOnSocket(10, algo, p, socketAddr, addr, &packet)
+				} else {
+					//add filename to buffer
+					go loadbalance.SaveFileName(addr, string(packet.Data))
+					//choose the best server to be assigned to this client request
+					bestServer := loadbalance.ChooseServer(serversAddr)
+					go loadbalance.AssignToServer(mainConn, bestServer, &packet)
+				}
 
-				// }
-				//choose the best server to be assigned to this client request
-				bestServer := loadbalance.ChooseServer(serversAddr)
-				go loadbalance.AssignToServer(mainConn, bestServer, &packet)
 			}
 		} else if length > 0 && length < 115 {
 			// receiving ack packets

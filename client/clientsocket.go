@@ -190,29 +190,6 @@ func buildFile(algo string, buffer map[int][]byte, filename string) {
 		}
 	}
 
-	// if algo != "sw" {
-	// 	// To store the keys in slice in sorted order
-	// 	var keys []int
-	// 	for k := range buffer {
-	// 		keys = append(keys, k)
-	// 	}
-	// 	sort.Ints(keys)
-
-	// 	// to store sorted buffer
-	// 	for _, k := range keys {
-	// 		for i := 0; i < len(buffer[k]); i++ {
-	// 			recData = append(recData, buffer[k][i])
-	// 		}
-	// 	}
-	// } else {
-	// 	// for sw algorithm no sorting just putting buffer to file
-	// 	for k := range buffer {
-	// 		for i := 0; i < len(buffer[k]); i++ {
-	// 			recData = append(recData, buffer[k][i])
-	// 		}
-	// 	}
-	// }
-
 	err := ioutil.WriteFile(filename, recData, 0644)
 	errors.CheckError(err)
 	log.SetOutput(flogC)
@@ -225,7 +202,7 @@ func CheckOnPck(packet *socket.Packet, algo string, buffer map[int][]byte, filen
 	if packet.Seqno == 0 {
 		pckNo = packet.PckNo
 		return 0
-	} else if int(packet.Seqno) == int(pckNo)-1 {
+	} else if int(packet.Seqno) == int(packet.PckNo)-1 {
 		fmt.Println(filename)
 		time.Sleep(5 * time.Millisecond)
 		buildFile(algo, buffer, filename)
