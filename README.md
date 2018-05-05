@@ -38,7 +38,7 @@ $ go run examples/loadbalancer/loadbalancer.go sr
 
 You can test the server-client library with running any of the bash files: `gbn.sh` for testing GoBackN algorithm, `sr.sh` for SelectiveRepeat, and `sw.sh` for Stop-and-Wait. You can also change the parameters for the client, the server, and the loadbalancer in `device_info/client.in` and `device_info/server.in`, and `device_info/loadbalancer.in`. If you want to neglect the simulation probability packet loss just change last attribute in `server.in` to 0. 
 
-You can also test it the loadbalancer by running `go run examples/loadbalancer/loadbalancer.go` and run some servers by running `go run examples/server/server.go sr` and run client to request files by running `go run examples/client/client.go sr`, but don't fforget to change the server address attribute for all clients is the address of the loadbalancer.
+You can also test the loadbalancer by running `go run examples/loadbalancer/loadbalancer.go` and run some servers by running `go run examples/server/server.go sr` and run client to request files by running `go run examples/client/client.go sr`, but don't fforget to change the server address attribute for all clients is the address of the loadbalancer.
 
 #### **For Client**
 ```
