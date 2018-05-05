@@ -176,28 +176,42 @@ func buildFile(algo string, buffer map[int][]byte, filename string) {
 
 	recData := make([]byte, pckNo*512)
 
-	if algo != "sw" {
-		// To store the keys in slice in sorted order
-		var keys []int
-		for k := range buffer {
-			keys = append(keys, k)
-		}
-		sort.Ints(keys)
+	// To store the keys in slice in sorted order
+	var keys []int
+	for k := range buffer {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
 
-		// to store sorted buffer
-		for _, k := range keys {
-			for i := 0; i < len(buffer[k]); i++ {
-				recData = append(recData, buffer[k][i])
-			}
-		}
-	} else {
-		// for sw algorithm no sorting just putting buffer to file
-		for k := range buffer {
-			for i := 0; i < len(buffer[k]); i++ {
-				recData = append(recData, buffer[k][i])
-			}
+	// to store sorted buffer
+	for _, k := range keys {
+		for i := 0; i < len(buffer[k]); i++ {
+			recData = append(recData, buffer[k][i])
 		}
 	}
+
+	// if algo != "sw" {
+	// 	// To store the keys in slice in sorted order
+	// 	var keys []int
+	// 	for k := range buffer {
+	// 		keys = append(keys, k)
+	// 	}
+	// 	sort.Ints(keys)
+
+	// 	// to store sorted buffer
+	// 	for _, k := range keys {
+	// 		for i := 0; i < len(buffer[k]); i++ {
+	// 			recData = append(recData, buffer[k][i])
+	// 		}
+	// 	}
+	// } else {
+	// 	// for sw algorithm no sorting just putting buffer to file
+	// 	for k := range buffer {
+	// 		for i := 0; i < len(buffer[k]); i++ {
+	// 			recData = append(recData, buffer[k][i])
+	// 		}
+	// 	}
+	// }
 
 	err := ioutil.WriteFile(filename, recData, 0644)
 	errors.CheckError(err)
